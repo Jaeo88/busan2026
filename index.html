@@ -5,20 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>2026 釜山小王子隨身手冊</title>
     
-    <!-- 引入 Tailwind CSS -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- 引入 React 與 ReactDOM -->
+    <!-- React & ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    
-    <!-- 引入 Babel (讓瀏覽器可以直接編譯 JSX) -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    <!-- 引入 Lucide Icons -->
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- 自訂 CSS 動畫與樣式 -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
         body { 
@@ -37,6 +34,11 @@
             animation-name: twinkle;
             animation-iteration-count: infinite;
             animation-timing-function: ease-in-out;
+        }
+        
+        .smooth-scroll {
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
         }
     </style>
 </head>
@@ -58,31 +60,49 @@
             const [expenseType, setExpenseType] = useState('trans');
             const [expenseDesc, setExpenseDesc] = useState('');
             const [expenseCost, setExpenseCost] = useState('');
+            const [paymentMethod, setPaymentMethod] = useState('WOWPASS');
 
-            // 初始化 Icons
+            const [weather, setWeather] = useState(null);
+            const [weatherLoading, setWeatherLoading] = useState(true);
+
             useEffect(() => {
                 lucide.createIcons();
             });
 
-            // 讀取 LocalStorage
+            // LocalStorage
             const [transportEx, setTransportEx] = useState(() => {
-                try {
-                    const saved = localStorage.getItem('busan_trans_final_app');
-                    return saved ? JSON.parse(saved) : [];
-                } catch(e) { return []; }
+                try { return JSON.parse(localStorage.getItem('busan_trans_pro_v4')) || []; } 
+                catch(e) { return []; }
             });
             const [shoppingEx, setShoppingEx] = useState(() => {
-                try {
-                    const saved = localStorage.getItem('busan_shop_final_app');
-                    return saved ? JSON.parse(saved) : [];
-                } catch(e) { return []; }
+                try { return JSON.parse(localStorage.getItem('busan_shop_pro_v4')) || []; } 
+                catch(e) { return []; }
             });
 
-            // 寫入 LocalStorage
             useEffect(() => {
-                localStorage.setItem('busan_trans_final_app', JSON.stringify(transportEx));
-                localStorage.setItem('busan_shop_final_app', JSON.stringify(shoppingEx));
+                localStorage.setItem('busan_trans_pro_v4', JSON.stringify(transportEx));
+                localStorage.setItem('busan_shop_pro_v4', JSON.stringify(shoppingEx));
             }, [transportEx, shoppingEx]);
+
+            // 獲取天氣資料
+            useEffect(() => {
+                const weatherApiUrl = 'https://api.open-meteo.com/v1/forecast?latitude=35.1796&longitude=129.0756&current=temperature_2m,weather_code&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Asia%2FSeoul&forecast_days=5';
+                
+                fetch(weatherApiUrl)
+                    .then(res => res.json())
+                    .then(data => { setWeather(data); setWeatherLoading(false); })
+                    .catch(err => { console.error(err); setWeatherLoading(false); });
+            }, []);
+
+            const getWeatherInfo = (code) => {
+                if ([0, 1].includes(code)) return { icon: '☀️', desc: '晴天', umbrella: false };
+                if ([2, 3].includes(code)) return { icon: '☁️', desc: '多雲', umbrella: false };
+                if ([45, 48].includes(code)) return { icon: '🌫️', desc: '有霧', umbrella: false };
+                if ([51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return { icon: '🌧️', desc: '下雨', umbrella: true };
+                if ([71, 73, 75, 77, 85, 86].includes(code)) return { icon: '❄️', desc: '下雪', umbrella: true };
+                if ([95, 96, 99].includes(code)) return { icon: '⛈️', desc: '雷雨', umbrella: true };
+                return { icon: '🌤️', desc: '未知', umbrella: false };
+            };
 
             const convertHkdToKrw = (val) => {
                 setHkdInput(val);
@@ -100,12 +120,13 @@
                 setExpenseType(type);
                 setExpenseDesc('');
                 setExpenseCost('');
+                setPaymentMethod('WOWPASS');
                 setShowModal(true);
             };
 
             const saveExpense = () => {
                 if (expenseDesc.trim() && expenseCost) {
-                    const newItem = { id: Date.now(), desc: expenseDesc, cost: parseInt(expenseCost) };
+                    const newItem = { id: Date.now(), desc: expenseDesc, cost: parseInt(expenseCost), method: paymentMethod };
                     if (expenseType === 'trans') setTransportEx([...transportEx, newItem]);
                     else setShoppingEx([...shoppingEx, newItem]);
                     setShowModal(false);
@@ -121,11 +142,8 @@
             const totalShop = shoppingEx.reduce((a, c) => a + c.cost, 0);
             const totalAll = totalTrans + totalShop;
 
-            const getNaverMapUrl = (query) => {
-                return `https://m.map.naver.com/search2/search.naver?query=${encodeURIComponent(query)}`;
-            };
+            const getNaverMapUrl = (query) => `https://m.map.naver.com/search2/search.naver?query=${encodeURIComponent(query)}`;
 
-            // 韓語語音播放功能
             const playKoreanVoice = (text, e) => {
                 if (e) e.stopPropagation();
                 if ('speechSynthesis' in window) {
@@ -137,6 +155,13 @@
                 }
             };
 
+            const getMethodBadge = (method) => {
+                if (method === '現金') return <span className="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-[9px] font-black shrink-0">💵 現金</span>;
+                if (method === '信用卡') return <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[9px] font-black shrink-0">💳 信用卡</span>;
+                return <span className="bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded text-[9px] font-black shrink-0">🎟️ WOWPASS</span>;
+            };
+
+            // ====== 行程資料 ======
             const itinerary = {
                 1: {
                 date: "04/25 (六)", title: "🛫 香港 ➡️ 海雲台 ➡️ 廣安里",
@@ -203,6 +228,7 @@
                 ]}
             };
 
+            // ====== 的士字條 ======
             const taxiNotes = [
                 { t: "🧾 索取收據", k: "영수증 주세요", d: "請給我收據。" },
                 { t: "🦊 甘川洞文化村 (最頂端)", k: "기사님, 감천문화마을 '어린왕자 포토존' 가까운 위쪽 도로에서 내려주세요.", d: "司機先生，請在靠近「小王子拍照區」上方的馬路讓我下車。" },
@@ -212,10 +238,25 @@
                 { t: "🏨 返回海雲台飯店", k: "기사님, 해운대 W 레지던스 (W Apartment) 호텔로 가주세요.", d: "司機先生，請前往海雲台 W 公寓酒店。謝謝。" }
             ];
 
+            // ====== 實用韓語 (全新分類) ======
+            const koreanPhrases = [
+                { t: "🧳 住宿與行李", k: "짐을 좀 맡길 수 있을까요?", d: "請問可以幫我寄存行李嗎？" },
+                { t: "☕ 咖啡廳點餐", k: "아이스 아메리카노 한 잔 주세요.", d: "請給我一杯冰美式咖啡。" },
+                { t: "🍽️ 餐廳用餐", k: "메뉴판 좀 주시겠어요?", d: "請問可以給我菜單嗎？" },
+                { t: "🌶️ 餐廳用餐", k: "덜 맵게 해주세요.", d: "請幫我做微辣 (不要太辣)。" },
+                { t: "💧 餐廳用餐", k: "물 좀 주세요.", d: "請給我一點水。" },
+                { t: "💰 購物結帳", k: "이거 얼마예요?", d: "請問這個多少錢？" },
+                { t: "🛍️ 購物退稅", k: "텍스프리 되나요?", d: "請問這裡可以退稅嗎 (Tax Free)？" },
+                { t: "🚽 尋找設施", k: "화장실이 어디예요?", d: "請問洗手間在哪裡？" },
+                { t: "📸 請求幫忙", k: "사진 좀 찍어주시겠어요?", d: "請問可以幫我們拍張照嗎？" },
+                { t: "🚨 緊急情況", k: "경찰 좀 불러주세요!", d: "請幫我報警！" },
+                { t: "🚑 緊急情況", k: "구급차 좀 불러주세요!", d: "請幫我叫救護車！" }
+            ];
+
             return (
                 <div className="min-h-screen text-[#1a2b4c] pb-[100px] relative overflow-x-hidden">
                     
-                    {/* 淡淡慢閃的背景星星 */}
+                    {/* 背景星星 */}
                     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden opacity-50">
                         {[...Array(15)].map((_, i) => (
                             <div key={`bg-star-${i}`} className="absolute text-blue-200 star-twinkle" 
@@ -223,8 +264,8 @@
                         ))}
                     </div>
 
-                    {/* 經典深藍與亮黃標題區 */}
-                    <div className="relative h-48 bg-[#1a2b4c] flex flex-col items-center justify-center overflow-hidden z-10">
+                    {/* 頂部標題 */}
+                    <div className="relative h-44 bg-[#1a2b4c] flex flex-col items-center justify-center overflow-hidden z-10">
                         <div className="absolute inset-0">
                             {[...Array(25)].map((_, i) => (
                                 <div key={`header-star-${i}`} className="absolute text-[#fcd34d] star-twinkle opacity-70" 
@@ -232,47 +273,49 @@
                             ))}
                         </div>
                         <div className="z-10 text-center flex flex-col items-center">
-                            <h1 className="text-3xl font-black text-white tracking-[0.2em] mb-2 flex items-center gap-2">
-                                🌟 BUSAN 2026 🌟
+                            <h1 className="text-3xl font-black text-white tracking-[0.2em] mb-1 flex items-center gap-2">
+                               🌟 BUSAN 2026 🌟
                             </h1>
-                            <p className="text-[#fcd34d] text-xs font-bold tracking-[0.4em] uppercase">The Little Prince</p>
+                            <p className="text-[#fcd34d] text-[10px] font-bold tracking-[0.4em] uppercase">The Little Prince</p>
                         </div>
                     </div>
 
                     {/* 匯率區 */}
                     <div className="px-5 -mt-6 relative z-20">
-                        <div className="bg-white rounded-2xl shadow-lg p-4 border border-gray-100">
-                            <div className="flex items-center justify-between mb-3">
-                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1">
-                                    <i data-lucide="calculator" className="w-3.5 h-3.5 text-[#fcd34d]"></i> 匯率 (1 HKD = 185 KRW)
-                                </span>
-                            </div>
+                        <div className="bg-white rounded-2xl shadow-lg p-3.5 border border-gray-100">
                             <div className="flex items-center gap-2">
-                                <div className="flex-1 bg-gray-50 rounded-xl p-2.5 border border-gray-100">
+                                <div className="flex-1 bg-gray-50 rounded-xl p-2 border border-gray-100">
                                     <p className="text-[10px] font-black text-gray-400 mb-0.5 text-center">HKD 🇭🇰</p>
-                                    <input type="number" value={hkdInput} onChange={(e) => convertHkdToKrw(e.target.value)} className="w-full text-center text-xl font-black text-[#1a2b4c] bg-transparent focus:outline-none" placeholder="0"/>
+                                    <input type="number" value={hkdInput} onChange={(e) => convertHkdToKrw(e.target.value)} className="w-full text-center text-lg font-black text-[#1a2b4c] bg-transparent focus:outline-none" placeholder="0"/>
                                 </div>
-                                <i data-lucide="arrow-left-right" className="w-4 h-4 text-gray-300 shrink-0"></i>
-                                <div className="flex-1 bg-blue-50 rounded-xl p-2.5 border border-blue-100">
+                                <div className="flex flex-col items-center justify-center">
+                                    <i data-lucide="arrow-left-right" className="w-3.5 h-3.5 text-gray-300"></i>
+                                    <span className="text-[8px] font-bold text-gray-400 mt-0.5">1:185</span>
+                                </div>
+                                <div className="flex-1 bg-blue-50 rounded-xl p-2 border border-blue-100">
                                     <p className="text-[10px] font-black text-blue-400 mb-0.5 text-center">KRW 🇰🇷</p>
-                                    <input type="number" value={krwInput} onChange={(e) => convertKrwToHkd(e.target.value)} className="w-full text-center text-xl font-black text-blue-600 bg-transparent focus:outline-none" placeholder="0"/>
+                                    <input type="number" value={krwInput} onChange={(e) => convertKrwToHkd(e.target.value)} className="w-full text-center text-lg font-black text-blue-600 bg-transparent focus:outline-none" placeholder="0"/>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* 導航選單 */}
+                    {/* 內容區塊 */}
                     <div className="mt-5 px-5 relative z-10">
-                        <div className="flex bg-white rounded-xl p-1 mb-5 border border-gray-200 shadow-sm">
-                            <button onClick={() => setActiveTab('itinerary')} className={`flex-1 py-2.5 text-sm font-black rounded-lg transition-all flex items-center justify-center gap-1.5 ${activeTab === 'itinerary' ? 'bg-[#1a2b4c] text-white shadow-md' : 'text-gray-400'}`}>📅 行程</button>
-                            <button onClick={() => setActiveTab('taxi')} className={`flex-1 py-2.5 text-sm font-black rounded-lg transition-all flex items-center justify-center gap-1.5 ${activeTab === 'taxi' ? 'bg-[#1a2b4c] text-white shadow-md' : 'text-gray-400'}`}>🚕 的士</button>
-                            <button onClick={() => setActiveTab('expense')} className={`flex-1 py-2.5 text-sm font-black rounded-lg transition-all flex items-center justify-center gap-1.5 ${activeTab === 'expense' ? 'bg-[#1a2b4c] text-white shadow-md' : 'text-gray-400'}`}>📒 記帳</button>
+                        
+                        {/* 頂部導航分頁 (改為5個) */}
+                        <div className="flex bg-white rounded-xl p-1 mb-5 border border-gray-200 shadow-sm overflow-x-auto no-scrollbar">
+                            {['itinerary', 'taxi', 'expense', 'info', 'phrase'].map((tab) => (
+                                <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 min-w-[55px] py-2.5 text-[11px] sm:text-xs font-black rounded-lg transition-all flex items-center justify-center gap-1 ${activeTab === tab ? 'bg-[#1a2b4c] text-white shadow-md' : 'text-gray-400'}`}>
+                                    {tab === 'itinerary' ? '📅 行程' : tab === 'taxi' ? '🚕 的士' : tab === 'expense' ? '📒 記帳' : tab === 'info' ? '☁️ 實用' : '🗣️ 韓語'}
+                                </button>
+                            ))}
                         </div>
 
-                        {/* 行程分頁 */}
+                        {/* ================= 行程 ================= */}
                         {activeTab === 'itinerary' && (
-                            <div className="space-y-5">
-                                <div className="flex space-x-2 overflow-x-auto pb-2 no-scrollbar">
+                            <div className="space-y-4">
+                                <div className="flex space-x-2 overflow-x-auto pb-2 no-scrollbar smooth-scroll">
                                     {[1, 2, 3, 4, 5].map(day => (
                                         <button key={day} onClick={() => setActiveDay(day)} className={`flex-shrink-0 w-16 py-2.5 rounded-xl text-sm font-black transition-all border-2 ${activeDay === day ? 'bg-[#fcd34d] border-[#fcd34d] text-[#1a2b4c] shadow-md' : 'bg-white border-gray-200 text-gray-400'}`}>
                                             Day {day}
@@ -319,45 +362,66 @@
                             </div>
                         )}
 
-                        {/* 的士字條分頁 */}
+                        {/* ================= 的士 ================= */}
                         {activeTab === 'taxi' && (
                             <div className="space-y-4">
                                 <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex items-start gap-2 mb-2">
                                     <i data-lucide="info" className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5"></i>
-                                    <p className="text-xs text-blue-800 font-bold">💡 點擊「小喇叭」可直接播放韓語發音；點擊「卡片」可進入大字螢幕模式。</p>
+                                    <p className="text-[11px] text-blue-800 font-bold">💡 點擊「小喇叭」播放語音；點擊「卡片」進入大字展示模式。</p>
                                 </div>
                                 {taxiNotes.map((note, idx) => (
-                                    <div key={idx} onClick={() => setFullscreenNote(note)} className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm active:bg-gray-50 transition-colors cursor-pointer relative">
-                                        <p className="text-[10px] font-black text-gray-400 mb-3 uppercase tracking-widest">{note.t}</p>
-                                        <div className="bg-[#1a2b4c] p-5 rounded-xl mb-3 shadow-inner relative overflow-hidden">
-                                            <div className="absolute top-2 right-3 text-[#fcd34d] opacity-30 text-xs">✦</div>
-                                            <p className="text-xl font-bold text-white text-center leading-relaxed pr-8">"{note.k}"</p>
-                                            <button onClick={(e) => playKoreanVoice(note.k, e)} className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2.5 bg-white/20 rounded-full hover:bg-white/30 active:scale-90 transition-all text-[#fcd34d]">
-                                                <i data-lucide="volume-2" className="w-5 h-5"></i>
+                                    <div key={idx} onClick={() => setFullscreenNote(note)} className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm active:scale-95 transition-transform cursor-pointer relative">
+                                        <p className="text-[10px] font-black text-gray-400 mb-2 uppercase tracking-widest">{note.t}</p>
+                                        <div className="bg-[#1a2b4c] p-4 rounded-xl mb-2 shadow-inner relative overflow-hidden">
+                                            <p className="text-lg font-bold text-white text-center leading-relaxed pr-8">"{note.k}"</p>
+                                            <button onClick={(e) => playKoreanVoice(note.k, e)} className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 bg-white/20 rounded-full text-[#fcd34d]">
+                                                <i data-lucide="volume-2" className="w-4 h-4"></i>
                                             </button>
                                         </div>
-                                        <div className="flex justify-between items-center mt-2">
-                                            <p className="text-sm text-gray-600 font-bold w-[85%]">{note.d}</p>
-                                            <i data-lucide="chevron-right" className="w-4 h-4 text-gray-300"></i>
-                                        </div>
+                                        <p className="text-[11px] text-gray-500 font-bold w-[90%]">{note.d}</p>
                                     </div>
                                 ))}
                             </div>
                         )}
 
-                        {/* 記帳分頁 */}
+                        {/* ================= 實用韓語 (新增) ================= */}
+                        {activeTab === 'phrase' && (
+                            <div className="space-y-4">
+                                <div className="bg-[#fcd34d]/20 p-4 rounded-xl border border-[#fcd34d]/50 flex items-start gap-2 mb-2">
+                                    <i data-lucide="message-circle" className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5"></i>
+                                    <p className="text-[11px] text-amber-900 font-bold">🗣️ 帶著長輩不慌張！點擊喇叭發聲，或點擊卡片全螢幕展示給店員看。</p>
+                                </div>
+                                {koreanPhrases.map((note, idx) => (
+                                    <div key={idx} onClick={() => setFullscreenNote(note)} className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm active:scale-95 transition-transform cursor-pointer relative">
+                                        <p className="text-[10px] font-black text-gray-400 mb-2 tracking-widest">{note.t}</p>
+                                        <div className="bg-[#1a2b4c] p-4 rounded-xl mb-2 shadow-inner relative overflow-hidden">
+                                            <p className="text-lg font-bold text-white text-center leading-relaxed pr-8">"{note.k}"</p>
+                                            <button onClick={(e) => playKoreanVoice(note.k, e)} className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 bg-white/20 rounded-full text-[#fcd34d]">
+                                                <i data-lucide="volume-2" className="w-4 h-4"></i>
+                                            </button>
+                                        </div>
+                                        <p className="text-[12px] text-blue-800 font-bold w-[90%]">{note.d}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* ================= 記帳 ================= */}
                         {activeTab === 'expense' && (
-                            <div className="space-y-5">
+                            <div className="space-y-4">
                                 <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
                                     <div className="flex justify-between items-center mb-4">
                                         <h3 className="font-black text-[#1a2b4c] flex items-center gap-2"><i data-lucide="navigation" className="w-4 h-4 text-blue-500"></i> 🚕 交通/的士</h3>
-                                        <button onClick={() => openExpenseModal('trans')} className="bg-[#1a2b4c] text-white p-2 rounded-xl shadow-md active:scale-95 transition-transform"><i data-lucide="plus" className="w-4 h-4"></i></button>
+                                        <button onClick={() => openExpenseModal('trans')} className="bg-[#1a2b4c] text-white p-2 rounded-xl shadow-md active:scale-95"><i data-lucide="plus" className="w-4 h-4"></i></button>
                                     </div>
                                     <div className="space-y-2.5">
                                         {transportEx.length === 0 && <p className="text-center text-gray-400 text-xs py-2">尚無紀錄</p>}
                                         {transportEx.map(item => (
-                                            <div key={item.id} className="flex justify-between items-center bg-gray-50 p-3.5 rounded-xl border border-gray-100">
-                                                <span className="text-sm font-bold text-gray-700">{item.desc}</span>
+                                            <div key={item.id} className="flex justify-between items-center bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                                <div className="flex flex-col">
+                                                    <span className="text-sm font-bold text-gray-700">{item.desc}</span>
+                                                    <span className="mt-1">{item.method ? getMethodBadge(item.method) : getMethodBadge('現金')}</span>
+                                                </div>
                                                 <div className="flex items-center gap-3">
                                                     <span className="text-sm font-black text-blue-600">₩{item.cost.toLocaleString()}</span>
                                                     <button onClick={() => deleteExpense('trans', item.id)} className="text-red-400 p-1"><i data-lucide="trash-2" className="w-4 h-4"></i></button>
@@ -369,13 +433,16 @@
                                 <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
                                     <div className="flex justify-between items-center mb-4">
                                         <h3 className="font-black text-[#1a2b4c] flex items-center gap-2"><i data-lucide="shopping-bag" className="w-4 h-4 text-pink-500"></i> 🛍️ 購物/美食</h3>
-                                        <button onClick={() => openExpenseModal('shop')} className="bg-pink-600 text-white p-2 rounded-xl shadow-md active:scale-95 transition-transform"><i data-lucide="plus" className="w-4 h-4"></i></button>
+                                        <button onClick={() => openExpenseModal('shop')} className="bg-pink-600 text-white p-2 rounded-xl shadow-md active:scale-95"><i data-lucide="plus" className="w-4 h-4"></i></button>
                                     </div>
                                     <div className="space-y-2.5">
                                         {shoppingEx.length === 0 && <p className="text-center text-gray-400 text-xs py-2">尚無紀錄</p>}
                                         {shoppingEx.map(item => (
-                                            <div key={item.id} className="flex justify-between items-center bg-gray-50 p-3.5 rounded-xl border border-gray-100">
-                                                <span className="text-sm font-bold text-gray-700">{item.desc}</span>
+                                            <div key={item.id} className="flex justify-between items-center bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                                <div className="flex flex-col">
+                                                    <span className="text-sm font-bold text-gray-700">{item.desc}</span>
+                                                    <span className="mt-1">{item.method ? getMethodBadge(item.method) : getMethodBadge('信用卡')}</span>
+                                                </div>
                                                 <div className="flex items-center gap-3">
                                                     <span className="text-sm font-black text-pink-600">₩{item.cost.toLocaleString()}</span>
                                                     <button onClick={() => deleteExpense('shop', item.id)} className="text-red-400 p-1"><i data-lucide="trash-2" className="w-4 h-4"></i></button>
@@ -386,72 +453,204 @@
                                 </div>
                             </div>
                         )}
-                    </div>
 
-                    {/* 緊湊底部面板 */}
-                    <div className="fixed bottom-0 left-0 right-0 z-[100] shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
-                        <div className="bg-[#1a2b4c] text-white px-5 py-1.5 flex justify-between items-center border-t border-[#1a2b4c]">
-                            <div className="flex items-center gap-1.5">
-                                <div className="bg-[#fcd34d] p-1 rounded text-[#1a2b4c]"><i data-lucide="star" className="w-3 h-3 fill-current"></i></div>
-                                <div className="flex items-baseline gap-2">
-                                    <span className="text-[8px] font-black text-white/60 uppercase tracking-widest">Total Spent</span>
-                                    <span className="text-[15px] font-black tracking-tight">₩{totalAll.toLocaleString()}</span>
+                        {/* ================= 天氣與工具 ================= */}
+                        {activeTab === 'info' && (
+                            <div className="space-y-4">
+                                {/* 動態天氣 */}
+                                <div className="bg-white rounded-3xl p-5 shadow-sm border border-blue-50 relative overflow-hidden">
+                                    <h3 className="font-black text-[#1a2b4c] flex items-center gap-2 mb-4 border-l-4 border-blue-400 pl-2">
+                                        <i data-lucide="cloud-sun" className="w-4 h-4 text-blue-500"></i> 釜山即時天氣
+                                    </h3>
+                                    
+                                    {weatherLoading ? (
+                                        <p className="text-center text-xs text-gray-400 py-6">即時天氣載入中...</p>
+                                    ) : weather ? (
+                                        <div>
+                                            <div className="flex items-center justify-between px-2 mb-2">
+                                                <div>
+                                                    <div className="flex items-baseline gap-1">
+                                                        <span className="text-4xl font-black text-[#1a2b4c]">{weather.current.temperature_2m}°</span>
+                                                        <span className="text-sm font-bold text-gray-500">C</span>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <span className="text-4xl">{getWeatherInfo(weather.current.weather_code).icon}</span>
+                                                    <p className="text-sm font-black text-[#1a2b4c] mt-1">{getWeatherInfo(weather.current.weather_code).desc}</p>
+                                                </div>
+                                            </div>
+
+                                            {/* 左右滑動的 24 小時預報 */}
+                                            <div className="mt-4 border-t border-gray-100 pt-4">
+                                                <p className="text-[10px] font-black text-gray-400 uppercase mb-2 flex items-center justify-between">
+                                                    <span>24 小時動態預報</span>
+                                                    <span className="text-[8px] bg-blue-50 text-blue-500 px-2 py-0.5 rounded-full">左右滑動 👉</span>
+                                                </p>
+                                                <div className="flex overflow-x-auto no-scrollbar smooth-scroll gap-3 pb-2">
+                                                    {(() => {
+                                                        let startIndex = weather.hourly.time.findIndex(t => t >= weather.current.time);
+                                                        if (startIndex === -1) startIndex = 0;
+                                                        
+                                                        const hourlyData = [];
+                                                        for(let i = 0; i < 24; i++) {
+                                                            let idx = startIndex + i;
+                                                            if (idx < weather.hourly.time.length) {
+                                                                hourlyData.push({
+                                                                    time: weather.hourly.time[idx].slice(11, 16),
+                                                                    temp: weather.hourly.temperature_2m[idx],
+                                                                    code: weather.hourly.weather_code[idx],
+                                                                    precip: weather.hourly.precipitation_probability[idx]
+                                                                });
+                                                            }
+                                                        }
+
+                                                        return hourlyData.map((h, i) => {
+                                                            const info = getWeatherInfo(h.code);
+                                                            return (
+                                                                <div key={i} className="flex flex-col items-center justify-center shrink-0 w-[60px] bg-blue-50/50 rounded-2xl p-2.5 border border-blue-100/50">
+                                                                    <span className="text-[10px] font-black text-gray-500">{i === 0 ? '現在' : h.time}</span>
+                                                                    <span className="text-2xl my-1.5">{info.icon}</span>
+                                                                    <span className="text-sm font-black text-[#1a2b4c]">{h.temp}°</span>
+                                                                    <div className="text-[9px] font-black text-blue-500 mt-1 flex items-center gap-0.5 bg-white px-1.5 py-0.5 rounded-md shadow-sm">
+                                                                        💧 {h.precip}%
+                                                                    </div>
+                                                                </div>
+                                                            )
+                                                        });
+                                                    })()}
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-2 mt-4 border-t border-gray-100 pt-4">
+                                                <p className="text-[10px] font-black text-gray-400 uppercase">5 Days Forecast</p>
+                                                {weather.daily.time.slice(0, 5).map((date, idx) => {
+                                                    const info = getWeatherInfo(weather.daily.weather_code[idx]);
+                                                    return (
+                                                        <div key={idx} className="flex justify-between items-center bg-gray-50 p-2.5 rounded-xl border border-gray-100">
+                                                            <span className="text-xs font-black text-gray-600 w-16">{date.slice(5).replace('-','/')}</span>
+                                                            <div className="flex items-center gap-2 w-20">
+                                                                <span className="text-lg">{info.icon}</span>
+                                                                {info.umbrella && <span className="bg-blue-100 text-blue-600 text-[8px] px-1.5 py-0.5 rounded font-black">帶傘☔</span>}
+                                                            </div>
+                                                            <div className="flex gap-2 text-xs font-black">
+                                                                <span className="text-red-400">{weather.daily.temperature_2m_max[idx]}°</span>
+                                                                <span className="text-gray-300">/</span>
+                                                                <span className="text-blue-400">{weather.daily.temperature_2m_min[idx]}°</span>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <p className="text-center text-xs text-red-400 py-4">無法取得天氣資訊</p>
+                                    )}
+                                </div>
+
+                                {/* 實用聯絡 */}
+                                <div className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100">
+                                    <h3 className="font-black text-[#1a2b4c] flex items-center gap-2 mb-4 border-l-4 border-[#fcd34d] pl-2">
+                                        <i data-lucide="info" className="w-4 h-4 text-[#fcd34d]"></i> 韓國實用資訊
+                                    </h3>
+                                    <div className="space-y-3">
+                                        <div className="bg-red-50 p-3 rounded-xl border border-red-100">
+                                            <p className="text-[10px] font-black text-red-400 uppercase mb-1">緊急聯絡</p>
+                                            <div className="flex justify-between text-sm font-bold text-[#1a2b4c]">
+                                                <span>報警: <a href="tel:112" className="text-red-600">112</a></span>
+                                                <span>救護/消防: <a href="tel:119" className="text-red-600">119</a></span>
+                                            </div>
+                                            <div className="mt-1 text-sm font-bold text-[#1a2b4c]">
+                                                旅遊翻譯熱線: <a href="tel:1330" className="text-blue-600">1330</a> (24小時)
+                                            </div>
+                                        </div>
+                                        <div className="bg-amber-50 p-3 rounded-xl border border-amber-100">
+                                            <p className="text-[10px] font-black text-amber-500 uppercase mb-1">退稅指南 (Tax Free)</p>
+                                            <p className="text-xs font-bold text-gray-700 leading-relaxed">
+                                                • 單筆消費滿 <strong className="text-red-500">15,000 韓元</strong> 即可退稅。<br/>
+                                                • 市區/即時退稅單筆上限 <strong className="text-blue-600">100萬韓元</strong>。<br/>
+                                                • 結帳時請主動出示護照並說："Tax Free, please"。
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
+                        )}
+                    </div>
+
+                    {/* 極度壓縮的底部面板 (5個功能鍵等寬) */}
+                    <div className="fixed bottom-0 left-0 right-0 z-[100] shadow-[0_-5px_10px_rgba(0,0,0,0.05)]">
+                        <div className="bg-[#1a2b4c] px-4 py-1.5 flex justify-between items-center border-t border-[#1a2b4c]">
+                            <div className="flex items-center gap-1.5">
+                                <span className="text-[9px] font-black text-white/50 uppercase tracking-widest">Total</span>
+                                <span className="text-sm font-black text-white">₩{totalAll.toLocaleString()}</span>
+                            </div>
                             <div className="flex items-baseline gap-1.5">
-                                <span className="text-[8px] font-black text-[#fcd34d]/80 uppercase tracking-widest">HKD Approx</span>
-                                <span className="text-[15px] font-black tracking-tight">${(totalAll/185).toFixed(0)}</span>
+                                <span className="text-[9px] font-black text-[#fcd34d]/80 uppercase tracking-widest">HKD</span>
+                                <span className="text-sm font-black text-[#fcd34d]">${(totalAll/185).toFixed(0)}</span>
                             </div>
                         </div>
-                        <div className="h-14 bg-white flex items-center justify-around border-t border-gray-200">
+                        
+                        <div className="h-[52px] bg-white flex items-center justify-around border-t border-gray-200 px-1">
                             <button onClick={() => setActiveTab('itinerary')} className={`flex flex-col items-center gap-0.5 flex-1 ${activeTab === 'itinerary' ? 'text-[#1a2b4c]' : 'text-gray-400'}`}>
-                                <i data-lucide="calendar" className="w-[18px] h-[18px]"></i>
-                                <span className="text-[9px] font-bold">行程</span>
+                                <i data-lucide="calendar" className="w-4 h-4"></i><span className="text-[9px] font-bold">行程</span>
                             </button>
                             <button onClick={() => setActiveTab('taxi')} className={`flex flex-col items-center gap-0.5 flex-1 ${activeTab === 'taxi' ? 'text-[#1a2b4c]' : 'text-gray-400'}`}>
-                                <i data-lucide="navigation" className="w-[18px] h-[18px]"></i>
-                                <span className="text-[9px] font-bold">的士</span>
+                                <i data-lucide="navigation" className="w-4 h-4"></i><span className="text-[9px] font-bold">的士</span>
                             </button>
                             <button onClick={() => setActiveTab('expense')} className={`flex flex-col items-center gap-0.5 flex-1 ${activeTab === 'expense' ? 'text-[#1a2b4c]' : 'text-gray-400'}`}>
-                                <i data-lucide="credit-card" className="w-[18px] h-[18px]"></i>
-                                <span className="text-[9px] font-bold">記帳</span>
+                                <i data-lucide="credit-card" className="w-4 h-4"></i><span className="text-[9px] font-bold">記帳</span>
+                            </button>
+                            <button onClick={() => setActiveTab('info')} className={`flex flex-col items-center gap-0.5 flex-1 ${activeTab === 'info' ? 'text-[#1a2b4c]' : 'text-gray-400'}`}>
+                                <i data-lucide="cloud-sun" className="w-4 h-4"></i><span className="text-[9px] font-bold">實用</span>
+                            </button>
+                            <button onClick={() => setActiveTab('phrase')} className={`flex flex-col items-center gap-0.5 flex-1 ${activeTab === 'phrase' ? 'text-[#1a2b4c]' : 'text-gray-400'}`}>
+                                <i data-lucide="message-circle" className="w-4 h-4"></i><span className="text-[9px] font-bold">韓語</span>
                             </button>
                         </div>
                     </div>
 
                     {/* 記帳 Modal */}
                     {showModal && (
-                        <div className="fixed inset-0 bg-[#1a2b4c]/80 backdrop-blur-sm z-[400] flex items-center justify-center p-5">
-                            <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl">
+                        <div className="fixed inset-0 bg-[#1a2b4c]/80 backdrop-blur-sm z-[400] flex items-center justify-center p-5 animate-in fade-in duration-200">
+                            <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-in zoom-in duration-200">
                                 <h3 className="text-xl font-black text-[#1a2b4c] mb-6">
-                                    {expenseType === 'trans' ? '🚕 新增交通支出' : '🛍️ 新增購物美食支出'}
+                                    {expenseType === 'trans' ? '🚕 新增交通支出' : '🛍️ 新增購物美食'}
                                 </h3>
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="text-[11px] font-black text-gray-400 uppercase mb-1 block">項目名稱</label>
-                                        <input type="text" value={expenseDesc} onChange={e => setExpenseDesc(e.target.value)} placeholder={expenseType === 'trans' ? '例如：往龍宮寺的士' : '例如：富平夜市豬蹄'} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold text-gray-800 focus:outline-none focus:border-[#1a2b4c]" />
+                                        <label className="text-[10px] font-black text-gray-400 uppercase mb-1 block">項目名稱</label>
+                                        <input type="text" value={expenseDesc} onChange={e => setExpenseDesc(e.target.value)} placeholder="輸入項目..." className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold text-gray-800 focus:outline-none focus:border-[#1a2b4c]" />
                                     </div>
                                     <div>
-                                        <label className="text-[11px] font-black text-gray-400 uppercase mb-1 block">金額 (KRW)</label>
-                                        <input type="number" value={expenseCost} onChange={e => setExpenseCost(e.target.value)} placeholder="0" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-lg font-black text-[#1a2b4c] focus:outline-none focus:border-[#1a2b4c]" />
+                                        <label className="text-[10px] font-black text-gray-400 uppercase mb-1 block">金額 (KRW)</label>
+                                        <input type="number" value={expenseCost} onChange={e => setExpenseCost(e.target.value)} placeholder="0" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-lg font-black text-[#1a2b4c] focus:outline-none focus:border-[#1a2b4c]" />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-black text-gray-400 uppercase mb-2 block">付款方式</label>
+                                        <div className="flex gap-2">
+                                            {['現金', '信用卡', 'WOWPASS'].map(method => (
+                                                <button 
+                                                    key={method} 
+                                                    onClick={() => setPaymentMethod(method)}
+                                                    className={`flex-1 py-2 rounded-lg text-[11px] font-black border transition-colors ${paymentMethod === method ? 'bg-blue-50 border-blue-400 text-blue-700' : 'bg-white border-gray-200 text-gray-400'}`}
+                                                >
+                                                    {method}
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="flex gap-3 mt-8">
-                                    <button onClick={() => setShowModal(false)} className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-black">取消</button>
-                                    <button onClick={saveExpense} className={`flex-1 py-3 text-white rounded-xl font-black ${expenseType === 'trans' ? 'bg-[#1a2b4c]' : 'bg-pink-600'}`}>儲存紀錄</button>
+                                <div className="flex gap-3 mt-6">
+                                    <button onClick={() => setShowModal(false)} className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-black text-sm">取消</button>
+                                    <button onClick={saveExpense} className={`flex-1 py-3 text-white rounded-xl font-black text-sm ${expenseType === 'trans' ? 'bg-[#1a2b4c]' : 'bg-pink-600'}`}>儲存紀錄</button>
                                 </div>
                             </div>
                         </div>
                     )}
 
-                    {/* 的士全螢幕模式 */}
+                    {/* 全螢幕語音/展示模式 */}
                     {fullscreenNote && (
                         <div className="fixed inset-0 bg-[#1a2b4c] z-[300] flex flex-col items-center justify-center p-8" onClick={() => setFullscreenNote(null)}>
-                            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                                {[...Array(20)].map((_, i) => (
-                                    <div key={`modal-star-${i}`} className="absolute text-[#fcd34d] star-twinkle opacity-50" style={{ top: `${Math.random() * 100}%`, left: `${Math.random() * 100}%`, fontSize: `${Math.random() * 10 + 5}px`, animationDelay: `${Math.random() * 2}s`, animationDuration: `${Math.random() * 3 + 2}s` }}>✦</div>
-                                ))}
-                            </div>
                             <button className="absolute top-8 right-8 p-4 text-white/50 z-20"><i data-lucide="x" className="w-10 h-10"></i></button>
                             <div className="w-full text-center space-y-10 z-10">
                                 <p className="text-[#fcd34d] text-lg font-black tracking-widest uppercase">{fullscreenNote.t}</p>
@@ -459,10 +658,9 @@
                                     <p className="text-4xl font-black text-white leading-snug break-words">{fullscreenNote.k}</p>
                                 </div>
                                 <button onClick={(e) => playKoreanVoice(fullscreenNote.k, e)} className="mx-auto flex items-center justify-center gap-3 bg-[#fcd34d] text-[#1a2b4c] px-8 py-4 rounded-full font-black text-xl shadow-lg active:scale-95 transition-transform">
-                                    <i data-lucide="volume-2" className="w-6 h-6"></i> 播放語音給司機聽
+                                    <i data-lucide="volume-2" className="w-6 h-6"></i> 播放語音給對方聽
                                 </button>
                                 <p className="text-gray-300 text-xl font-bold">{fullscreenNote.d}</p>
-                                <p className="text-gray-500 text-sm mt-10 animate-bounce">👆 點擊螢幕其他空白處關閉</p>
                             </div>
                         </div>
                     )}
