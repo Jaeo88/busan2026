@@ -34,6 +34,15 @@
             scroll-behavior: smooth;
             -webkit-overflow-scrolling: touch;
         }
+        @keyframes fadeinout {
+            0% { top: 0; opacity: 0; }
+            10% { top: 30px; opacity: 1; }
+            90% { top: 30px; opacity: 1; }
+            100% { top: 0; opacity: 0; }
+        }
+        .toast-animate {
+            animation: fadeinout 2.5s forwards;
+        }
     </style>
 </head>
 <body>
@@ -48,6 +57,7 @@
             const [hkdInput, setHkdInput] = useState('');
             const [krwInput, setKrwInput] = useState('');
             const [fullscreenNote, setFullscreenNote] = useState(null);
+            const [toastMsg, setToastMsg] = useState('');
             const exchangeRate = 185; 
 
             const [showModal, setShowModal] = useState(false);
@@ -63,24 +73,22 @@
                 lucide.createIcons();
             });
 
-            // LocalStorage
             const [transportEx, setTransportEx] = useState(() => {
-                try { return JSON.parse(localStorage.getItem('busan_trans_final_v6')) || []; } 
+                try { return JSON.parse(localStorage.getItem('busan_trans_pro_v8')) || []; } 
                 catch(e) { return []; }
             });
             const [shoppingEx, setShoppingEx] = useState(() => {
-                try { return JSON.parse(localStorage.getItem('busan_shop_final_v6')) || []; } 
+                try { return JSON.parse(localStorage.getItem('busan_shop_pro_v8')) || []; } 
                 catch(e) { return []; }
             });
 
             useEffect(() => {
-                localStorage.setItem('busan_trans_final_v6', JSON.stringify(transportEx));
-                localStorage.setItem('busan_shop_final_v6', JSON.stringify(shoppingEx));
+                localStorage.setItem('busan_trans_pro_v8', JSON.stringify(transportEx));
+                localStorage.setItem('busan_shop_pro_v8', JSON.stringify(shoppingEx));
             }, [transportEx, shoppingEx]);
 
-            // 天氣資料
             useEffect(() => {
-                const weatherApiUrl = 'https://api.open-meteo.com/v1/forecast?latitude=35.1796&longitude=129.0756&current=temperature_2m,weather_code&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Asia%2FSeoul&forecast_days=5';
+                const weatherApiUrl = 'https://api.open-meteo.com/v1/forecast?latitude=35.1796&longitude=129.0756&current=temperature_2m,apparent_temperature,weather_code&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Asia%2FSeoul&forecast_days=5';
                 fetch(weatherApiUrl)
                     .then(res => res.json())
                     .then(data => { setWeather(data); setWeatherLoading(false); })
@@ -95,6 +103,14 @@
                 if ([71, 73, 75, 77, 85, 86].includes(code)) return { icon: '❄️', desc: '下雪', umbrella: true };
                 if ([95, 96, 99].includes(code)) return { icon: '⛈️', desc: '雷雨', umbrella: true };
                 return { icon: '🌤️', desc: '未知', umbrella: false };
+            };
+
+            const getClothingSuggestion = (apparentTemp) => {
+                if (apparentTemp >= 28) return "天氣炎熱！建議穿短袖、透氣衣物，並注意防曬。";
+                if (apparentTemp >= 20) return "氣候舒適微熱。建議短袖搭配薄外套，洋蔥式穿脫。";
+                if (apparentTemp >= 12) return "天氣微涼。建議穿長袖、針織衫，帶上秋裝外套。";
+                if (apparentTemp >= 5) return "天氣寒冷！建議穿發熱衣、毛衣，搭配防風厚外套。";
+                return "天氣嚴寒！請穿發熱衣、厚羽絨外套，並備妥手套圍巾。";
             };
 
             const convertHkdToKrw = (val) => {
@@ -135,10 +151,13 @@
             const totalShop = shoppingEx.reduce((a, c) => a + c.cost, 0);
             const totalAll = totalTrans + totalShop;
 
-            // Naver Map 跳轉
             const getNaverMapUrl = (query) => `https://m.map.naver.com/search2/search.naver?query=${encodeURIComponent(query)}`;
 
-            // 複製功能
+            const showToast = (msg) => {
+                setToastMsg(msg);
+                setTimeout(() => setToastMsg(''), 2500);
+            };
+
             const copyToClipboard = (text) => {
                 const textArea = document.createElement("textarea");
                 textArea.value = text;
@@ -146,14 +165,13 @@
                 textArea.select();
                 try {
                     document.execCommand('copy');
-                    alert('✅ 已成功複製韓文地址！您可以前往 Naver Map 貼上搜尋。');
+                    showToast('✅ 已複製韓文地址！');
                 } catch (err) {
-                    alert('❌ 複製失敗，請手動選取複製');
+                    showToast('❌ 複製失敗，請手動複製');
                 }
                 document.body.removeChild(textArea);
             };
 
-            // 韓語語音
             const playKoreanVoice = (text, e) => {
                 if (e) e.stopPropagation();
                 if ('speechSynthesis' in window) {
@@ -166,100 +184,101 @@
             };
 
             const getMethodBadge = (method) => {
-                if (method === '現金') return <span className="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-[10px] font-black shrink-0">💵 現金</span>;
-                if (method === '信用卡') return <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[10px] font-black shrink-0">💳 信用卡</span>;
-                return <span className="bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded text-[10px] font-black shrink-0">🎟️ WOWPASS</span>;
+                if (method === '現金') return <span className="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-[9px] font-black shrink-0">💵 現金</span>;
+                if (method === '信用卡') return <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[9px] font-black shrink-0">💳 信用卡</span>;
+                return <span className="bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded text-[9px] font-black shrink-0">🎟️ WOWPASS</span>;
             };
 
-            // ====== 地點資訊 ======
+            // ====== 地點資訊資料 ======
             const placesData = [
                 { cat: "機場", koName: "김해국제공항", zhName: "金海國際機場", koAddr: "부산 강서구 공항진입로 108", enAddr: "108 Gonghangjinip-ro, Gangseo-gu, Busan" },
                 { cat: "酒店", koName: "W 레지던스 해운대", zhName: "W公寓酒店-海雲台", koAddr: "부산 해운대구 해운대해변로 237", enAddr: "237 Haeundaehaebyeon-ro, Haeundae-gu, Busan" },
+                { cat: "景點", koName: "씨라이프 부산아쿠아리움", zhName: "SEA LIFE 釜山水族館", koAddr: "부산 해운대구 해운대해변로 266", enAddr: "266 Haeundaehaebyeon-ro, Haeundae-gu, Busan" },
+                { cat: "景點", koName: "광안리 해수욕장", zhName: "廣安里海水浴場", koAddr: "부산 수영구 광안해변로 219", enAddr: "219 Gwanganhaebyeon-ro, Suyeong-gu, Busan" },
                 { cat: "汗蒸幕", koName: "클럽디 오아시스", zhName: "Club D Oasis", koAddr: "부산 해운대구 달맞이길 30", enAddr: "30 Dalmaji-gil, Haeundae-gu, Busan" },
                 { cat: "遊艇體驗", koName: "광안리해양레포츠센터", zhName: "廣安里海洋休閒運動中心", koAddr: "부산 수영구 광안해변로54번길 222", enAddr: "222 Gwanganhaebyeon-ro 54beon-gil, Suyeong-gu, Busan" },
-                { cat: "景點", koName: "해동용궁사", zhName: "海東龍宮寺", koAddr: "부산 기장군 기장읍 용궁길 86", enAddr: "86 Yonggung-gil, Gijang-eup, Gijang-gun, Busan" },
+                { cat: "景點", koName: "아르떼뮤지엄 부산", zhName: "ARTE Museum 影島", koAddr: "부산 영도구 해양로247번길 29", enAddr: "29 Haeyang-ro 247beon-gil, Yeongdo-gu, Busan" },
+                { cat: "商場", koName: "신세계백화점 센텀시티점", zhName: "新世界百貨 Centum City", koAddr: "부산 해운대구 센텀남대로 35", enAddr: "35 Centumnam-daero, Haeundae-gu, Busan" },
                 { cat: "景點", koName: "스카이라인 루지 부산", zhName: "Skyline Luge 釜山", koAddr: "부산 기장군 기장읍 기장해안로 205", enAddr: "205 Gijanghaean-ro, Gijang-eup, Gijang-gun, Busan" },
                 { cat: "景點", koName: "감천문화마을", zhName: "甘川洞文化村", koAddr: "부산 사하구 감내2로 203", enAddr: "203 Gamnae 2-ro, Saha-gu, Busan" },
                 { cat: "景點", koName: "흰여울문화마을", zhName: "白淺灘文化村", koAddr: "부산 영도구 영선동4가 1044-6", enAddr: "1044-6 Yeongseon-dong 4-ga, Yeongdo-gu, Busan" },
-                { cat: "景點", koName: "태종대 유원지", zhName: "太宗台", koAddr: "부산 영도구 전망로 24", enAddr: "24 Jeonmang-ro, Yeongdo-gu, Busan" },
                 { cat: "景點", koName: "용두산공원", zhName: "龍頭山公園", koAddr: "부산 중구 용두산길 37-55", enAddr: "37-55 Yongdusan-gil, Jung-gu, Busan" },
                 { cat: "景點", koName: "송도해상케이블카", zhName: "松島海上纜車", koAddr: "부산 서구 송도해변로 171", enAddr: "171 Songdohaebyeon-ro, Seo-gu, Busan" },
-                { cat: "餐廳", koName: "60계치킨 해운대점", zhName: "60炸雞 海雲台店", koAddr: "부산 해운대구 구남로24번길 39", enAddr: "39 Gunam-ro 24beon-gil, Haeundae-gu, Busan" },
-                { cat: "餐廳", koName: "고짚 기장점", zhName: "Gojip 烤牛肋骨 機張店", koAddr: "부산 기장군 기장읍 차성로 324", enAddr: "324 Chaseong-ro, Gijang-eup, Gijang-gun, Busan" }
+                { cat: "餐廳", koName: "해월목", zhName: "Haewolmok 烤肉 (金在中同款)", koAddr: "부산 해운대구 구남로12번길 11", enAddr: "11 Gunam-ro 12beon-gil, Haeundae-gu, Busan" }
             ];
 
-            // ====== 行程資料 (Day 2 已補充的士接駁) ======
+            // ====== 行程資料 (防雨大升級) ======
             const itinerary = {
                 1: {
-                date: "04/25 (六)", title: "🛫 香港 ➡️ 海雲台 ➡️ 廣安里",
+                date: "04/25 (六)", title: "🛫 抵達 ➡️ 海雲台室內放鬆 ➡️ 遊艇",
                 items: [
                     { time: "00:55", desc: "香港機場 T1 集合" },
                     { time: "02:55", desc: "起飛 - 德威航空 TW640" },
                     { time: "07:25", desc: "抵達金海國際機場 (航班：TW640)" },
                     { time: "08:30", desc: "去海雲台酒店：W公寓酒店", taxi: "約 ₩25,000 (約 45 分鐘)", loc: "W Apartment Haeundae" },
                     { time: "09:00", desc: "早餐" },
-                    { time: "10:30", desc: "Club D Oasis 汗蒸幕 (VBP #1)", taxi: "約 ₩4,800 (約 5 分鐘直達)", loc: "클럽디 오아시스" },
+                    { time: "10:30", desc: "Club D Oasis 汗蒸幕 ♨️", taxi: "約 ₩4,800 (約 5 分鐘直達)", loc: "클럽디 오아시스", note: "⭐ 完美室內行程，泡湯避雨看海！" },
                     { time: "13:30", desc: "午餐：海雲台傳聞中人蔘雞", note: "步行至中洞商圈", loc: "해운대 소문난삼계탕" },
-                    { time: "15:00", desc: "Check In" },
-                    { time: "16:00", desc: "海雲台購物" },
-                    { time: "17:00", desc: "去遊艇服務處", taxi: "約 ₩8,000 (約 20 分鐘)", loc: "광안리해양레포츠센터", note: "地址: 부산 수영구 광안해변로54번길 222" },
-                    { time: "18:00", desc: "抵達遊艇服務處登記" },
-                    { time: "18:30", desc: "Yacht Holic 遊艇體驗 (已預約)" },
-                    { time: "20:00", desc: "廣安里無人機表演" },
-                    { time: "21:30", desc: "宵夜：60 炸雞 (海雲台店)", taxi: "回程約 ₩8,000 (約 20 分鐘)", note: "推薦 CCC 脆皮口味", loc: "60계치킨 해운대점" }
+                    { time: "15:00", desc: "Check In & 休息" },
+                    { time: "16:30", desc: "海雲台商圈逛街" },
+                    { time: "17:45", desc: "去廣安里海灘", taxi: "約 ₩8,000 (約 25 分鐘)", loc: "광안리 해수욕장" },
+                    { time: "18:30", desc: "晚餐：廣安里海景西餐廳", note: "看著大橋吃晚餐，提早吃防暈船" },
+                    { time: "20:15", desc: "廣安里海灘漫步消化", note: "慢慢散步去遊艇中心，約需 30 分鐘" },
+                    { time: "21:00", desc: "抵達遊艇服務處登記", loc: "광안리해양레포츠센터", note: "地址: 부산 수영구 광안해변로54번길 222" },
+                    { time: "21:30", desc: "Yacht Holic 遊艇體驗 🥂", note: "⭐ 海上欣賞 22:00 無人機表演！(☔ 若因豪雨取消，改去 The Bay 101 吃炸魚薯條看室內夜景)" },
+                    { time: "22:45", desc: "回程：返回酒店", taxi: "回程約 ₩8,000 (約 20 分鐘)" }
                 ]},
                 2: {
-                date: "04/26 (日)", title: "🚃 海岸列車 ➡️ 龍宮寺 ➡️ 膠囊火車",
+                date: "04/26 (日)", title: "🦈 水族館避雨 ➡️ 海岸列車 ➡️ 烤肉",
                 items: [
-                    { time: "11:00", desc: "早午餐：海木 (Haemok) 鰻魚飯", note: "建議 10:30 現場取號", loc: "해목 해운대점" },
-                    { time: "12:30", desc: "去尾浦站乘搭海岸列車", taxi: "海木出發約 ₩4,800 (約 10 分鐘)" }, // ★ 新增
-                    { time: "13:00", desc: "海岸列車 (尾浦 ➜ 松亭)", note: "持 VBP 兌換或現場購票", loc: "해운대블루라인파크 미포정거장" },
-                    { time: "14:30", desc: "海東龍宮寺", taxi: "松亭出發約 ₩6,000 (約 10 分鐘)", loc: "해동용궁사" },
-                    { time: "16:15", desc: "DIART Coffee (青沙浦)", taxi: "龍宮寺出發約 ₩6,000 (約 15 分鐘)", note: "休息避開人潮", loc: "디아트커피" },
+                    { time: "09:30", desc: "SEA LIFE 釜山水族館 🦈", note: "⭐ 金在中同款！(完全在室內，雨天首選)", loc: "씨라이프 부산아쿠아리움" },
+                    { time: "11:00", desc: "早午餐：海木 (Haemok) 鰻魚飯", note: "建議 10:30 先去現場取號", loc: "해목 해운대점" },
+                    { time: "12:30", desc: "去尾浦站乘搭海岸列車", taxi: "海木出發約 ₩4,800 (約 10 分鐘)" },
+                    { time: "13:00", desc: "海岸列車 (尾浦 ➜ 松亭)", note: "持 VBP。車廂內看雨中海景超浪漫！", loc: "해운대블루라인파크 미포정거장" },
+                    { time: "14:30", desc: "松亭/青沙浦 海景咖啡廳", note: "☔ 雨天建議略過龍宮寺，改在 Coralani 或 DIART Coffee 喝咖啡聽雨聲。", loc: "디아트커피" },
                     { time: "17:15", desc: "青沙浦站排隊準備", note: "建議預留 45 分鐘排隊驗票" },
-                    { time: "18:00", desc: "膠囊小火車 (青沙浦 ➜ 尾浦)", note: "已預約，看夕陽時間" },
-                    { time: "19:00", desc: "返回海雲台商圈", taxi: "尾浦出發約 ₩5,000 (約 10 分鐘)" }, // ★ 新增
-                    { time: "19:30", desc: "晚餐：味贊王/廣安木/伍班長", loc: "맛찬들왕소금구이 해운대점" }
+                    { time: "18:00", desc: "膠囊小火車 (青沙浦 ➜ 尾浦)", note: "已預約，雨天的車廂也很溫馨" },
+                    { time: "19:00", desc: "返回海雲台商圈", taxi: "尾浦出發約 ₩5,000 (約 10 分鐘)" },
+                    { time: "19:30", desc: "晚餐：Haewolmok 烤肉 🥩", note: "⭐ 金在中同款愛店！", loc: "해월목" }
                 ]},
                 3: {
-                date: "04/27 (一)", title: "🏎️ Skyline Luge ➡️ 樂天世界",
+                date: "04/27 (一)", title: "🏎️ 機張動感樂園 (含防雨備案)",
                 items: [
                     { time: "10:00", desc: "早餐" },
-                    { time: "11:30", desc: "Skyline Luge (VBP #2)", taxi: "海雲台出發約 ₩18,000 (約 25 分鐘)", loc: "스카이라인 루지 부산" },
-                    { time: "13:00", desc: "樂天 Outlet 購物 & 午餐", note: "內有 EPT 專櫃 (步行前往)", loc: "롯데프리미엄아울렛 동부산점" },
-                    { time: "16:00", desc: "樂天世界 (VBP #3)", note: "童話城堡、看遊行 (步行前往)", loc: "롯데월드 어드벤처 부산" },
+                    { time: "11:30", desc: "Skyline Luge (VBP #2) 🏎️", taxi: "海雲台出發約 ₩18,000 (約 25 分鐘)", loc: "스카이라인 루지 부산", note: "☔ 雨天備案：改去旁邊的「釜山國立科學館」或「IKEA 東釜山店」室內逛街。" },
+                    { time: "13:00", desc: "樂天 Outlet 購物 & 午餐", note: "內有 EPT 專櫃 (走廊多有遮雨棚)", loc: "롯데프리미엄아울렛 동부산점" },
+                    { time: "16:00", desc: "樂天世界 (VBP #3) 🎡", note: "童話城堡、看遊行", loc: "롯데월드 어드벤처 부산", note: "☔ 雨天備案：若雨大設施停開，提早回市區逛「新世界百貨 Centum City」血拼及享受超豪華 Spa Land。" },
                     { time: "19:00", desc: "晚餐：Gojip 烤牛肋骨", taxi: "樂天出發約 ₩6,000 (約 15 分鐘)", loc: "고짚 기장점" },
                     { time: "21:00", desc: "回酒店", taxi: "直回海雲台約 ₩15,000 (約 30 分鐘)" }
                 ]},
                 4: {
-                date: "04/28 (二)", title: "🦊 甘川洞 ➡️ 影島 ➡️ 南浦洞",
+                date: "04/28 (二)", title: "🖼️ 影島光影藝術 ➡️ 南浦洞地下街",
                 items: [
-                    { time: "10:00", desc: "甘川洞文化村 (小王子)", taxi: "海雲台直達約 ₩25,000 (約 45 分鐘)", loc: "감천문화마을" },
-                    { time: "12:30", desc: "白淺灘文化村", taxi: "甘川出發約 ₩7,000 (約 15 分鐘)", note: "影島海景咖啡廳拍照", loc: "흰여울문화마을" },
-                    { time: "14:30", desc: "太宗台", taxi: "白淺灘出發約 ₩8,000 (約 20 分鐘)", note: "需另購 Danubi 列車票", loc: "태종대 유원지" },
-                    { time: "16:00", desc: "龍頭山公園", taxi: "太宗台出發約 ₩10,000 (約 25 分鐘)", note: "從南浦洞步行街搭扶梯直達山頂", loc: "용두산공원" },
-                    { time: "17:00", desc: "南浦洞購物 (ABC Mart / OY)", note: "搭扶梯下山後就是商圈核心", loc: "남포동거리" },
-                    { time: "19:00", desc: "富平罐頭市場", note: "Milgot (밀곳) 購買艾草糕", loc: "부평깡통시장" },
+                    { time: "10:00", desc: "ARTE Museum Busan 🖼️", taxi: "海雲台出發約 ₩25,000 (約 45 分鐘)", loc: "아르떼뮤지엄 부산", note: "⭐ 雨天最強備案！超人氣室內沉浸式光影展，取代易淋雨的甘川洞。" },
+                    { time: "13:00", desc: "白淺灘文化村 / 影島 Cafe", taxi: "ARTE出發約 ₩8,000 (約 15 分鐘)", note: "找間面海咖啡廳看絕美海景避雨。", loc: "흰여울문화마을" },
+                    { time: "15:30", desc: "龍頭山公園 (視天氣)", taxi: "白淺灘出發約 ₩7,000 (約 15 分鐘)", note: "☔ 若雨大可直接略過，進入地下街。", loc: "용두산공원" },
+                    { time: "16:00", desc: "南浦洞商圈 & 地下街 🛍️", note: "連接地鐵的超長地下街，完全不怕下雨！可逛 ABC Mart / OY。", loc: "남포동거리" },
+                    { time: "19:00", desc: "富平罐頭市場", note: "⭐ 有巨型遮雨頂棚！買 Milgot (밀곳) 艾草糕。", loc: "부평깡통시장" },
                     { time: "19:30", desc: "晚餐：富平豬蹄街", note: "就在罐頭市場隔壁，推薦涼拌豬蹄", loc: "부산 부평족발골목" },
                     { time: "21:00", desc: "回酒店", taxi: "南浦洞直回約 ₩20,000 (約 40 分鐘)" }
                 ]},
                 5: {
                 date: "04/29 (三)", title: "🚠 松島纜車 ➡️ X the Sky ➡️ 機場",
                 items: [
-                    { time: "09:30", desc: "Moving Photo 報紙自拍店 📷", taxi: "海雲台出發約 ₩22,000 (約 40 分鐘)", note: "纜車馬路對面。VBP折₩2,000。建議先拍成品更有氛圍！", loc: "무빙포토 송도해상케이블카점" },
-                    { time: "10:30", desc: "松島海上纜車 (VBP #4)", note: "1樓換票→4樓搭乘。水晶來回₩22k，人多需共乘(最多8人)", loc: "송도해상케이블카" },
-                    { time: "11:30", desc: "松島龍宮雲橋 (VBP #5)", note: "位於纜車下站對面 (步行)", loc: "송도용궁구름다리" },
+                    { time: "09:30", desc: "Moving Photo 報紙自拍店 📷", taxi: "海雲台出發約 ₩22,000 (約 40 分鐘)", note: "室內自拍不怕雨！VBP折₩2,000。", loc: "무빙포토 송도해상케이블카점" },
+                    { time: "10:30", desc: "松島海上纜車 (VBP #4)", note: "水晶來回₩22k。☔ 一般雨天照常行駛，雨景別有風情。", loc: "송도해상케이블카" },
+                    { time: "11:30", desc: "松島龍宮雲橋 (VBP #5)", note: "☔ 若風大雨大會關閉，可改在纜車對岸喝咖啡。", loc: "송도용궁구름다리" },
                     { time: "12:30", desc: "回海雲台", taxi: "松島出發約 ₩22,000 (約 40 分鐘)" },
                     { time: "13:30", desc: "午餐：風川灣淡水鰻魚", note: "海雲台 LCT 附近，現點現烤", loc: "풍천만 해운대점" },
-                    { time: "15:30", desc: "Busan X the Sky (100 樓景觀)", note: "全球最高 Starbucks", loc: "부산엑스더스카이" },
+                    { time: "15:30", desc: "Busan X the Sky ☕", note: "☔ 100樓 Starbucks。若遇濃霧無景觀，可改逛旁邊的 LCT Mall。", loc: "부산엑스더스카이" },
                     { time: "17:30", desc: "酒店取行李" },
                     { time: "19:30", desc: "到達金海機場", taxi: "海雲台出發約 ₩25,000 (約 50 分鐘)", note: "航班：TW639，21:50 起飛" }
                 ]}
             };
 
-            // ====== 的士字條 ======
             const taxiNotes = [
                 { t: "🧾 索取收據", k: "영수증 주세요", d: "請給我收據。" },
+                { t: "🖼️ 影島 ARTE Museum", k: "기사님, 영도 아르떼뮤지엄으로 가주세요.", d: "司機先生，請前往影島 ARTE Museum。" },
                 { t: "🦊 甘川洞文化村 (最頂端)", k: "기사님, 감천문화마을 '어린왕자 포토존' 가까운 위쪽 도로에서 내려주세요.", d: "司機先生，請在靠近「小王子拍照區」上方的馬路讓我下車。" },
                 { t: "🌊 影島白淺灘文化村", k: "기사님, 위쪽 큰길 '흰여울 안내소' 근처에서 내려주세요.", d: "司機先生，請在上方大馬路的「白淺灘詢問處」附近讓我下車。" },
                 { t: "⛩️ 海東龍宮寺", k: "기사님, 해동용궁사 주차장 안쪽 입구까지 최대한 가까이 가주세요.", d: "司機先生，請盡量幫我開到海東龍宮寺停車場最裡面的入口處。" },
@@ -267,7 +286,6 @@
                 { t: "🏨 返回海雲台飯店", k: "기사님, 해운대 W 레지던스 (W Apartment) 호텔로 가주세요.", d: "司機先生，請前往海雲台 W 公寓酒店。謝謝。" }
             ];
 
-            // ====== 實用韓語 ======
             const koreanPhrases = [
                 { t: "🧳 住宿與行李", k: "짐을 좀 맡길 수 있을까요?", d: "請問可以幫我寄存行李嗎？" },
                 { t: "☕ 咖啡廳點餐", k: "아이스 아메리카노 한 잔 주세요.", d: "請給我一杯冰美式咖啡。" },
@@ -283,9 +301,14 @@
             ];
 
             return (
-                <div className="min-h-screen text-[#1a2b4c] pb-[110px] relative overflow-x-hidden">
+                <div className="min-h-screen text-[#1a2b4c] pb-[100px] relative overflow-x-hidden">
                     
-                    {/* 星空背景 */}
+                    {toastMsg && (
+                        <div className="fixed z-[600] left-1/2 -translate-x-1/2 bg-gray-900/90 backdrop-blur-md text-white px-6 py-3 rounded-full font-black text-sm shadow-2xl toast-animate flex items-center gap-2">
+                            {toastMsg}
+                        </div>
+                    )}
+
                     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden opacity-50">
                         {[...Array(15)].map((_, i) => (
                             <div key={`bg-star-${i}`} className="absolute text-blue-200 star-twinkle" 
@@ -293,7 +316,6 @@
                         ))}
                     </div>
 
-                    {/* 頂部標題 */}
                     <div className="relative h-44 bg-[#1a2b4c] flex flex-col items-center justify-center overflow-hidden z-10">
                         <div className="absolute inset-0">
                             {[...Array(25)].map((_, i) => (
@@ -309,7 +331,6 @@
                         </div>
                     </div>
 
-                    {/* 匯率區 */}
                     <div className="px-5 -mt-6 relative z-20">
                         <div className="bg-white rounded-2xl shadow-lg p-3.5 border border-gray-100">
                             <div className="flex items-center gap-2">
@@ -319,7 +340,7 @@
                                 </div>
                                 <div className="flex flex-col items-center justify-center">
                                     <i data-lucide="arrow-left-right" className="w-3.5 h-3.5 text-gray-300"></i>
-                                    <span className="text-[9px] font-bold text-gray-400 mt-0.5">1:185</span>
+                                    <span className="text-[8px] font-bold text-gray-400 mt-0.5">1:185</span>
                                 </div>
                                 <div className="flex-1 bg-blue-50 rounded-xl p-2 border border-blue-100">
                                     <p className="text-[10px] font-black text-blue-400 mb-0.5 text-center">KRW 🇰🇷</p>
@@ -329,10 +350,7 @@
                         </div>
                     </div>
 
-                    {/* 內容區塊 */}
                     <div className="mt-5 px-4 relative z-10">
-                        
-                        {/* 頂部導航分頁 (文字加大) */}
                         <div className="flex bg-white rounded-xl p-1.5 mb-5 border border-gray-200 shadow-sm overflow-x-auto no-scrollbar smooth-scroll gap-1.5">
                             {['itinerary', 'taxi', 'places', 'expense', 'info', 'phrase'].map((tab) => (
                                 <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-shrink-0 min-w-[72px] px-2 py-3 text-xs sm:text-sm font-black rounded-lg transition-all flex items-center justify-center gap-1.5 ${activeTab === tab ? 'bg-[#1a2b4c] text-white shadow-md' : 'text-gray-400'}`}>
@@ -341,7 +359,6 @@
                             ))}
                         </div>
 
-                        {/* ================= 行程 ================= */}
                         {activeTab === 'itinerary' && (
                             <div className="space-y-4">
                                 <div className="flex space-x-2 overflow-x-auto pb-2 no-scrollbar smooth-scroll">
@@ -354,7 +371,7 @@
 
                                 <div className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100">
                                     <div className="mb-5 border-l-4 border-[#fcd34d] pl-3">
-                                        <p className="text-xs font-black text-gray-400 mb-1 uppercase">{itinerary[activeDay].date}</p>
+                                        <p className="text-[11px] font-black text-gray-400 mb-1 uppercase">{itinerary[activeDay].date}</p>
                                         <h2 className="text-xl font-black text-[#1a2b4c] leading-tight">{itinerary[activeDay].title}</h2>
                                     </div>
 
@@ -391,30 +408,31 @@
                             </div>
                         )}
 
-                        {/* ================= 的士 ================= */}
                         {activeTab === 'taxi' && (
                             <div className="space-y-4">
                                 <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex items-start gap-2 mb-2">
                                     <i data-lucide="info" className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5"></i>
-                                    <p className="text-xs text-blue-800 font-bold">💡 點擊「小喇叭」播放語音；點擊「卡片」進入大字展示模式。</p>
+                                    <p className="text-[11px] text-blue-800 font-bold">💡 點擊「小喇叭」播放語音；點擊「卡片」進入大字展示模式。</p>
                                 </div>
                                 {taxiNotes.map((note, idx) => (
                                     <div key={idx} onClick={() => setFullscreenNote(note)} className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm active:scale-95 transition-transform cursor-pointer relative">
-                                        <p className="text-[11px] font-black text-gray-400 mb-3 uppercase tracking-widest">{note.t}</p>
+                                        <p className="text-[10px] font-black text-gray-400 mb-3 uppercase tracking-widest">{note.t}</p>
                                         <div className="bg-[#1a2b4c] p-5 rounded-xl mb-3 shadow-inner relative overflow-hidden">
                                             <div className="absolute top-2 right-3 text-[#fcd34d] opacity-30 text-xs">✦</div>
                                             <p className="text-xl font-bold text-white text-center leading-relaxed pr-8">"{note.k}"</p>
-                                            <button onClick={(e) => playKoreanVoice(note.k, e)} className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 bg-white/20 rounded-full text-[#fcd34d]">
+                                            <button onClick={(e) => playKoreanVoice(note.k, e)} className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2.5 bg-white/20 rounded-full hover:bg-white/30 active:scale-90 transition-all text-[#fcd34d]">
                                                 <i data-lucide="volume-2" className="w-5 h-5"></i>
                                             </button>
                                         </div>
-                                        <p className="text-sm text-gray-600 font-bold w-[90%]">{note.d}</p>
+                                        <div className="flex justify-between items-center mt-2">
+                                            <p className="text-sm text-gray-600 font-bold w-[85%]">{note.d}</p>
+                                            <i data-lucide="chevron-right" className="w-4 h-4 text-gray-300"></i>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
                         )}
 
-                        {/* ================= 地點 ================= */}
                         {activeTab === 'places' && (
                             <div className="space-y-4">
                                 <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100 flex items-start gap-2 mb-2">
@@ -450,7 +468,6 @@
                             </div>
                         )}
 
-                        {/* ================= 記帳 ================= */}
                         {activeTab === 'expense' && (
                             <div className="space-y-5">
                                 <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
@@ -498,10 +515,8 @@
                             </div>
                         )}
 
-                        {/* ================= 實用 / 天氣 ================= */}
                         {activeTab === 'info' && (
                             <div className="space-y-5">
-                                {/* 動態天氣 */}
                                 <div className="bg-white rounded-3xl p-6 shadow-sm border border-blue-50 relative overflow-hidden">
                                     <h3 className="text-lg font-black text-[#1a2b4c] flex items-center gap-2 mb-5 border-l-4 border-blue-400 pl-3">
                                         <i data-lucide="cloud-sun" className="w-5 h-5 text-blue-500"></i> 釜山即時天氣
@@ -517,6 +532,7 @@
                                                         <span className="text-5xl font-black text-[#1a2b4c]">{weather.current.temperature_2m}°</span>
                                                         <span className="text-base font-bold text-gray-500">C</span>
                                                     </div>
+                                                    <p className="text-xs font-bold text-gray-500 mt-1 pl-1">體感溫度 {weather.current.apparent_temperature}°C</p>
                                                 </div>
                                                 <div className="text-right">
                                                     <span className="text-5xl">{getWeatherInfo(weather.current.weather_code).icon}</span>
@@ -524,7 +540,16 @@
                                                 </div>
                                             </div>
 
-                                            {/* 左右滑動預報 */}
+                                            <div className="bg-indigo-50 p-4 rounded-2xl border border-indigo-100 my-5 flex gap-3 items-start">
+                                                <i data-lucide="shirt" className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5"></i>
+                                                <div>
+                                                    <p className="text-xs font-black text-indigo-800 uppercase mb-1">今日穿搭建議</p>
+                                                    <p className="text-sm font-bold text-gray-700 leading-relaxed">
+                                                        {getClothingSuggestion(weather.current.apparent_temperature)}
+                                                    </p>
+                                                </div>
+                                            </div>
+
                                             <div className="mt-5 border-t border-gray-100 pt-5">
                                                 <p className="text-xs font-black text-gray-400 uppercase mb-3 flex items-center justify-between">
                                                     <span>24 小時動態預報</span>
@@ -591,7 +616,6 @@
                                     )}
                                 </div>
 
-                                {/* 實用聯絡 */}
                                 <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
                                     <h3 className="text-lg font-black text-[#1a2b4c] flex items-center gap-2 mb-5 border-l-4 border-[#fcd34d] pl-3">
                                         <i data-lucide="info" className="w-5 h-5 text-[#fcd34d]"></i> 韓國實用資訊
@@ -632,7 +656,7 @@
                                         <p className="text-[11px] font-black text-gray-400 mb-3 tracking-widest">{note.t}</p>
                                         <div className="bg-[#1a2b4c] p-5 rounded-xl mb-3 shadow-inner relative overflow-hidden">
                                             <p className="text-xl font-bold text-white text-center leading-relaxed pr-8">"{note.k}"</p>
-                                            <button onClick={(e) => playKoreanVoice(note.k, e)} className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2.5 bg-white/20 rounded-full text-[#fcd34d]">
+                                            <button onClick={(e) => playKoreanVoice(note.k, e)} className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2.5 bg-white/20 rounded-full hover:bg-white/30 active:scale-90 transition-all text-[#fcd34d]">
                                                 <i data-lucide="volume-2" className="w-5 h-5"></i>
                                             </button>
                                         </div>
@@ -643,7 +667,7 @@
                         )}
                     </div>
 
-                    {/* 底部導航 (放大圖示與字體) */}
+                    {/* 底部導航 */}
                     <div className="fixed bottom-0 left-0 right-0 z-[100] shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
                         <div className="bg-[#1a2b4c] px-5 py-2 flex justify-between items-center border-t border-[#1a2b4c]">
                             <div className="flex items-center gap-2">
@@ -670,7 +694,7 @@
                                 <i data-lucide="credit-card" className="w-5 h-5"></i><span className="text-[10px] font-black">記帳</span>
                             </button>
                             <button onClick={() => setActiveTab('info')} className={`flex flex-col items-center gap-1 flex-1 ${activeTab === 'info' ? 'text-[#1a2b4c]' : 'text-gray-400'}`}>
-                                <i data-lucide="cloud-sun" className="w-5 h-5"></i><span className="text-[10px] font-black">實用</span>
+                                <i data-lucide="cloud-sun" className="w-5 h-5"></i><span className="text-[10px] font-black">天氣</span>
                             </button>
                             <button onClick={() => setActiveTab('phrase')} className={`flex flex-col items-center gap-1 flex-1 ${activeTab === 'phrase' ? 'text-[#1a2b4c]' : 'text-gray-400'}`}>
                                 <i data-lucide="message-circle" className="w-5 h-5"></i><span className="text-[10px] font-black">韓語</span>
@@ -720,14 +744,19 @@
                     {/* 全螢幕語音/展示模式 */}
                     {fullscreenNote && (
                         <div className="fixed inset-0 bg-[#1a2b4c] z-[300] flex flex-col items-center justify-center p-8" onClick={() => setFullscreenNote(null)}>
+                            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                                {[...Array(20)].map((_, i) => (
+                                    <div key={`modal-star-${i}`} className="absolute text-[#fcd34d] star-twinkle opacity-50" style={{ top: `${Math.random() * 100}%`, left: `${Math.random() * 100}%`, fontSize: `${Math.random() * 10 + 5}px`, animationDelay: `${Math.random() * 2}s`, animationDuration: `${Math.random() * 3 + 2}s` }}>✦</div>
+                                ))}
+                            </div>
                             <button className="absolute top-8 right-8 p-4 text-white/50 z-20"><i data-lucide="x" className="w-10 h-10"></i></button>
                             <div className="w-full text-center space-y-10 z-10">
-                                <p className="text-[#fcd34d] text-xl font-black tracking-widest uppercase">{fullscreenNote.t}</p>
+                                <p className="text-[#fcd34d] text-lg font-black tracking-widest uppercase">{fullscreenNote.t}</p>
                                 <div className="bg-white/10 rounded-3xl p-10 border border-white/20 backdrop-blur-md shadow-2xl">
                                     <p className="text-4xl font-black text-white leading-snug break-words">{fullscreenNote.k}</p>
                                 </div>
                                 <button onClick={(e) => playKoreanVoice(fullscreenNote.k, e)} className="mx-auto flex items-center justify-center gap-3 bg-[#fcd34d] text-[#1a2b4c] px-8 py-4 rounded-full font-black text-xl shadow-lg active:scale-95 transition-transform">
-                                    <i data-lucide="volume-2" className="w-6 h-6"></i> 播放語音
+                                    <i data-lucide="volume-2" className="w-6 h-6"></i> 播放語音給對方聽
                                 </button>
                                 <p className="text-gray-300 text-xl font-bold">{fullscreenNote.d}</p>
                             </div>
