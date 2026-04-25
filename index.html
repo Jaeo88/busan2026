@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
@@ -73,20 +73,22 @@
                 lucide.createIcons();
             });
 
+            // LocalStorage
             const [transportEx, setTransportEx] = useState(() => {
-                try { return JSON.parse(localStorage.getItem('busan_trans_pro_v8')) || []; } 
+                try { return JSON.parse(localStorage.getItem('busan_trans_pro_v10')) || []; } 
                 catch(e) { return []; }
             });
             const [shoppingEx, setShoppingEx] = useState(() => {
-                try { return JSON.parse(localStorage.getItem('busan_shop_pro_v8')) || []; } 
+                try { return JSON.parse(localStorage.getItem('busan_shop_pro_v10')) || []; } 
                 catch(e) { return []; }
             });
 
             useEffect(() => {
-                localStorage.setItem('busan_trans_pro_v8', JSON.stringify(transportEx));
-                localStorage.setItem('busan_shop_pro_v8', JSON.stringify(shoppingEx));
+                localStorage.setItem('busan_trans_pro_v10', JSON.stringify(transportEx));
+                localStorage.setItem('busan_shop_pro_v10', JSON.stringify(shoppingEx));
             }, [transportEx, shoppingEx]);
 
+            // 天氣資料
             useEffect(() => {
                 const weatherApiUrl = 'https://api.open-meteo.com/v1/forecast?latitude=35.1796&longitude=129.0756&current=temperature_2m,apparent_temperature,weather_code&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Asia%2FSeoul&forecast_days=5';
                 fetch(weatherApiUrl)
@@ -193,12 +195,13 @@
             const placesData = [
                 { cat: "機場", koName: "김해국제공항", zhName: "金海國際機場", koAddr: "부산 강서구 공항진입로 108", enAddr: "108 Gonghangjinip-ro, Gangseo-gu, Busan" },
                 { cat: "酒店", koName: "W 레지던스 해운대", zhName: "W公寓酒店-海雲台", koAddr: "부산 해운대구 해운대해변로 237", enAddr: "237 Haeundaehaebyeon-ro, Haeundae-gu, Busan" },
+                { cat: "購物", koName: "롯데백화점 부산본점", zhName: "樂天百貨 釜山總店 (西面)", koAddr: "부산 부산진구 가야대로 772", enAddr: "772 Gaya-daero, Busanjin-gu, Busan" },
                 { cat: "景點", koName: "씨라이프 부산아쿠아리움", zhName: "SEA LIFE 釜山水族館", koAddr: "부산 해운대구 해운대해변로 266", enAddr: "266 Haeundaehaebyeon-ro, Haeundae-gu, Busan" },
                 { cat: "景點", koName: "광안리 해수욕장", zhName: "廣安里海水浴場", koAddr: "부산 수영구 광안해변로 219", enAddr: "219 Gwanganhaebyeon-ro, Suyeong-gu, Busan" },
                 { cat: "汗蒸幕", koName: "클럽디 오아시스", zhName: "Club D Oasis", koAddr: "부산 해운대구 달맞이길 30", enAddr: "30 Dalmaji-gil, Haeundae-gu, Busan" },
                 { cat: "遊艇體驗", koName: "광안리해양레포츠센터", zhName: "廣安里海洋休閒運動中心", koAddr: "부산 수영구 광안해변로54번길 222", enAddr: "222 Gwanganhaebyeon-ro 54beon-gil, Suyeong-gu, Busan" },
                 { cat: "景點", koName: "아르떼뮤지엄 부산", zhName: "ARTE Museum 影島", koAddr: "부산 영도구 해양로247번길 29", enAddr: "29 Haeyang-ro 247beon-gil, Yeongdo-gu, Busan" },
-                { cat: "商場", koName: "신세계백화점 센텀시티점", zhName: "新世界百貨 Centum City", koAddr: "부산 해운대구 센텀남대로 35", enAddr: "35 Centumnam-daero, Haeundae-gu, Busan" },
+                { cat: "景點", koName: "해동용궁사", zhName: "海東龍宮寺", koAddr: "부산 기장군 기장읍 용궁길 86", enAddr: "86 Yonggung-gil, Gijang-eup, Gijang-gun, Busan" },
                 { cat: "景點", koName: "스카이라인 루지 부산", zhName: "Skyline Luge 釜山", koAddr: "부산 기장군 기장읍 기장해안로 205", enAddr: "205 Gijanghaean-ro, Gijang-eup, Gijang-gun, Busan" },
                 { cat: "景點", koName: "감천문화마을", zhName: "甘川洞文化村", koAddr: "부산 사하구 감내2로 203", enAddr: "203 Gamnae 2-ro, Saha-gu, Busan" },
                 { cat: "景點", koName: "흰여울문화마을", zhName: "白淺灘文化村", koAddr: "부산 영도구 영선동4가 1044-6", enAddr: "1044-6 Yeongseon-dong 4-ga, Yeongdo-gu, Busan" },
@@ -207,7 +210,7 @@
                 { cat: "餐廳", koName: "해월목", zhName: "Haewolmok 烤肉 (金在中同款)", koAddr: "부산 해운대구 구남로12번길 11", enAddr: "11 Gunam-ro 12beon-gil, Haeundae-gu, Busan" }
             ];
 
-            // ====== 行程資料 (防雨大升級) ======
+            // ====== 行程資料 (Day 4 完美調整物流版) ======
             const itinerary = {
                 1: {
                 date: "04/25 (六)", title: "🛫 抵達 ➡️ 海雲台室內放鬆 ➡️ 遊艇",
@@ -239,7 +242,8 @@
                     { time: "17:15", desc: "青沙浦站排隊準備", note: "建議預留 45 分鐘排隊驗票" },
                     { time: "18:00", desc: "膠囊小火車 (青沙浦 ➜ 尾浦)", note: "已預約，雨天的車廂也很溫馨" },
                     { time: "19:00", desc: "返回海雲台商圈", taxi: "尾浦出發約 ₩5,000 (約 10 分鐘)" },
-                    { time: "19:30", desc: "晚餐：Haewolmok 烤肉 🥩", note: "⭐ 金在中同款愛店！", loc: "해월목" }
+                    { time: "19:30", desc: "晚餐：Haewolmok 烤肉 🥩", note: "⭐ 金在中同款愛店！", loc: "해월목" },
+                    { time: "21:00", desc: "便利店尋寶：金在中漢堡扒 🍱", note: "⭐ 買完直接返酒店放雪櫃！去 GS25 買「金在中的咖哩漢堡扒定食」當宵夜或隔天早餐。" }
                 ]},
                 3: {
                 date: "04/27 (一)", title: "🏎️ 機張動感樂園 (含防雨備案)",
@@ -252,15 +256,16 @@
                     { time: "21:00", desc: "回酒店", taxi: "直回海雲台約 ₩15,000 (約 30 分鐘)" }
                 ]},
                 4: {
-                date: "04/28 (二)", title: "🖼️ 影島光影藝術 ➡️ 南浦洞地下街",
+                date: "04/28 (二)", title: "🦊 影島 ➡️ 南浦洞 ➡️ 買酒返酒店",
                 items: [
-                    { time: "10:00", desc: "ARTE Museum Busan 🖼️", taxi: "海雲台出發約 ₩25,000 (約 45 分鐘)", loc: "아르떼뮤지엄 부산", note: "⭐ 雨天最強備案！超人氣室內沉浸式光影展，取代易淋雨的甘川洞。" },
-                    { time: "13:00", desc: "白淺灘文化村 / 影島 Cafe", taxi: "ARTE出發約 ₩8,000 (約 15 分鐘)", note: "找間面海咖啡廳看絕美海景避雨。", loc: "흰여울문화마을" },
-                    { time: "15:30", desc: "龍頭山公園 (視天氣)", taxi: "白淺灘出發約 ₩7,000 (約 15 分鐘)", note: "☔ 若雨大可直接略過，進入地下街。", loc: "용두산공원" },
-                    { time: "16:00", desc: "南浦洞商圈 & 地下街 🛍️", note: "連接地鐵的超長地下街，完全不怕下雨！可逛 ABC Mart / OY。", loc: "남포동거리" },
-                    { time: "19:00", desc: "富平罐頭市場", note: "⭐ 有巨型遮雨頂棚！買 Milgot (밀곳) 艾草糕。", loc: "부평깡통시장" },
-                    { time: "19:30", desc: "晚餐：富平豬蹄街", note: "就在罐頭市場隔壁，推薦涼拌豬蹄", loc: "부산 부평족발골목" },
-                    { time: "21:00", desc: "回酒店", taxi: "南浦洞直回約 ₩20,000 (約 40 分鐘)" }
+                    { time: "10:00", desc: "前往甘川洞文化村", taxi: "海雲台直達約 ₩25,000 (約 45 分鐘)", loc: "감천문화마을" },
+                    { time: "10:45", desc: "甘川洞文化村 (小王子)", note: "☔ 雨天備案：若雨太大，改去影島 ARTE Museum 室內光影展。" },
+                    { time: "13:00", desc: "白淺灘文化村 / 影島 Cafe", taxi: "甘川出發約 ₩7,000 (約 15 分鐘)", note: "找間面海咖啡廳看絕美海景避雨。", loc: "흰여울문화마을" },
+                    { time: "15:00", desc: "南浦洞商圈 & 龍頭山公園", taxi: "白淺灘出發約 ₩8,000 (約 20 分鐘)", note: "可逛超長地下街，完全不怕下雨！", loc: "남포동거리" },
+                    { time: "17:00", desc: "晚餐：富平豬蹄街 & 罐頭市場", note: "提早食晚餐。逛市場買 Milgot (밀곳) 艾草糕。", loc: "부산 부평족발골목" },
+                    { time: "18:30", desc: "出發前往西面買酒", taxi: "南浦洞出發約 ₩10,000 (約 20 分鐘)", note: "食飽剛好過去，準備回程最後一站！" },
+                    { time: "19:00", desc: "樂天百貨釜山總店 (西面) 🌸", note: "⭐ 直奔B1買「金在中聯名櫻花米酒」！(百貨平日20:00關門，時間剛剛好)", loc: "롯데백화점 부산본점" },
+                    { time: "20:00", desc: "帶著戰利品回酒店！", taxi: "西面直回海雲台約 ₩20,000 (約 35 分鐘)", note: "買完重甸甸的酒直接搭車返酒店休息，完全唔洗拎住行！" }
                 ]},
                 5: {
                 date: "04/29 (三)", title: "🚠 松島纜車 ➡️ X the Sky ➡️ 機場",
@@ -278,7 +283,7 @@
 
             const taxiNotes = [
                 { t: "🧾 索取收據", k: "영수증 주세요", d: "請給我收據。" },
-                { t: "🖼️ 影島 ARTE Museum", k: "기사님, 영도 아르떼뮤지엄으로 가주세요.", d: "司機先生，請前往影島 ARTE Museum。" },
+                { t: "🛍️ 樂天百貨釜山總店 (西面)", k: "기사님, 서면 롯데백화점 부산본점으로 가주세요.", d: "司機先生，請前往西面的樂天百貨釜山總店。" },
                 { t: "🦊 甘川洞文化村 (最頂端)", k: "기사님, 감천문화마을 '어린왕자 포토존' 가까운 위쪽 도로에서 내려주세요.", d: "司機先生，請在靠近「小王子拍照區」上方的馬路讓我下車。" },
                 { t: "🌊 影島白淺灘文化村", k: "기사님, 위쪽 큰길 '흰여울 안내소' 근처에서 내려주세요.", d: "司機先生，請在上方大馬路的「白淺灘詢問處」附近讓我下車。" },
                 { t: "⛩️ 海東龍宮寺", k: "기사님, 해동용궁사 주차장 안쪽 입구까지 최대한 가까이 가주세요.", d: "司機先生，請盡量幫我開到海東龍宮寺停車場最裡面的入口處。" },
@@ -287,6 +292,8 @@
             ];
 
             const koreanPhrases = [
+                { t: "🌟 追星：買便當", k: "김재중 함박정식 도시락 있나요?", d: "請問有金在中代言的那個漢堡排便當嗎？" },
+                { t: "🌟 追星：買米酒", k: "벚꽃 에디션 막걸리 재고 있나요?", d: "請問櫻花版米酒還有貨嗎？" },
                 { t: "🧳 住宿與行李", k: "짐을 좀 맡길 수 있을까요?", d: "請問可以幫我寄存行李嗎？" },
                 { t: "☕ 咖啡廳點餐", k: "아이스 아메리카노 한 잔 주세요.", d: "請給我一杯冰美式咖啡。" },
                 { t: "🍽️ 餐廳用餐", k: "메뉴판 좀 주시겠어요?", d: "請問可以給我菜單嗎？" },
@@ -325,7 +332,7 @@
                         </div>
                         <div className="z-10 text-center flex flex-col items-center">
                             <h1 className="text-3xl font-black text-white tracking-[0.2em] mb-1 flex items-center gap-2">
-                              🌟 BUSAN 2026 🌟
+                                🌟 BUSAN 2026 🌟
                             </h1>
                             <p className="text-[#fcd34d] text-xs font-bold tracking-[0.4em] uppercase">The Little Prince</p>
                         </div>
@@ -644,7 +651,6 @@
                             </div>
                         )}
 
-                        {/* ================= 實用韓語 ================= */}
                         {activeTab === 'phrase' && (
                             <div className="space-y-4">
                                 <div className="bg-[#fcd34d]/20 p-4 rounded-xl border border-[#fcd34d]/50 flex items-start gap-2 mb-2">
@@ -667,7 +673,6 @@
                         )}
                     </div>
 
-                    {/* 底部導航 */}
                     <div className="fixed bottom-0 left-0 right-0 z-[100] shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
                         <div className="bg-[#1a2b4c] px-5 py-2 flex justify-between items-center border-t border-[#1a2b4c]">
                             <div className="flex items-center gap-2">
@@ -702,7 +707,6 @@
                         </div>
                     </div>
 
-                    {/* 記帳 Modal */}
                     {showModal && (
                         <div className="fixed inset-0 bg-[#1a2b4c]/80 backdrop-blur-sm z-[400] flex items-center justify-center p-5 animate-in fade-in duration-200">
                             <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-in zoom-in duration-200">
@@ -741,7 +745,6 @@
                         </div>
                     )}
 
-                    {/* 全螢幕語音/展示模式 */}
                     {fullscreenNote && (
                         <div className="fixed inset-0 bg-[#1a2b4c] z-[300] flex flex-col items-center justify-center p-8" onClick={() => setFullscreenNote(null)}>
                             <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -751,7 +754,7 @@
                             </div>
                             <button className="absolute top-8 right-8 p-4 text-white/50 z-20"><i data-lucide="x" className="w-10 h-10"></i></button>
                             <div className="w-full text-center space-y-10 z-10">
-                                <p className="text-[#fcd34d] text-lg font-black tracking-widest uppercase">{fullscreenNote.t}</p>
+                                <p className="text-[#fcd34d] text-xl font-black tracking-widest uppercase">{fullscreenNote.t}</p>
                                 <div className="bg-white/10 rounded-3xl p-10 border border-white/20 backdrop-blur-md shadow-2xl">
                                     <p className="text-4xl font-black text-white leading-snug break-words">{fullscreenNote.k}</p>
                                 </div>
