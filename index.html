@@ -87,7 +87,8 @@ body {
             <button onclick="switchTab('taxi')" data-tab="taxi" class="tab-btn flex-shrink-0 min-w-[72px] px-2 py-3 text-xs sm:text-sm font-black rounded-lg transition-all flex items-center justify-center gap-1.5 text-gray-400">🚕 的士</button>
             <button onclick="switchTab('places')" data-tab="places" class="tab-btn flex-shrink-0 min-w-[72px] px-2 py-3 text-xs sm:text-sm font-black rounded-lg transition-all flex items-center justify-center gap-1.5 text-gray-400">📍 地點</button>
             <button onclick="switchTab('expense')" data-tab="expense" class="tab-btn flex-shrink-0 min-w-[72px] px-2 py-3 text-xs sm:text-sm font-black rounded-lg transition-all flex items-center justify-center gap-1.5 text-gray-400">📒 記帳</button>
-            <button onclick="switchTab('info')" data-tab="info" class="tab-btn flex-shrink-0 min-w-[72px] px-2 py-3 text-xs sm:text-sm font-black rounded-lg transition-all flex items-center justify-center gap-1.5 text-gray-400">☁️ 實用</button>
+            <button onclick="switchTab('weather')" data-tab="weather" class="tab-btn flex-shrink-0 min-w-[72px] px-2 py-3 text-xs sm:text-sm font-black rounded-lg transition-all flex items-center justify-center gap-1.5 text-gray-400">☁️ 天氣</button>
+            <button onclick="switchTab('info')" data-tab="info" class="tab-btn flex-shrink-0 min-w-[72px] px-2 py-3 text-xs sm:text-sm font-black rounded-lg transition-all flex items-center justify-center gap-1.5 text-gray-400">ℹ️ 實用</button>
             <button onclick="switchTab('phrase')" data-tab="phrase" class="tab-btn flex-shrink-0 min-w-[72px] px-2 py-3 text-xs sm:text-sm font-black rounded-lg transition-all flex items-center justify-center gap-1.5 text-gray-400">🗣️ 韓語</button>
         </div>
 
@@ -149,23 +150,26 @@ body {
                 <span id="bottom-total-hkd" class="text-base font-black text-[#fcd34d] tracking-tight">$0</span>
             </div>
         </div>
-        <div class="h-[60px] bg-white flex items-center justify-around border-t border-gray-200 px-1 pb-1">
-            <button onclick="switchTab('itinerary')" data-nav="itinerary" class="nav-btn flex flex-col items-center gap-1 flex-1 text-[#1a2b4c]">
+        <div class="h-[60px] bg-white flex items-center justify-around border-t border-gray-200 px-1 pb-1 overflow-x-auto no-scrollbar">
+            <button onclick="switchTab('itinerary')" data-nav="itinerary" class="nav-btn flex flex-col items-center gap-1 flex-1 text-[#1a2b4c] min-w-[50px]">
                 <i data-lucide="calendar" class="w-5 h-5"></i><span class="text-[10px] font-black">行程</span>
             </button>
-            <button onclick="switchTab('taxi')" data-nav="taxi" class="nav-btn flex flex-col items-center gap-1 flex-1 text-gray-400">
+            <button onclick="switchTab('taxi')" data-nav="taxi" class="nav-btn flex flex-col items-center gap-1 flex-1 text-gray-400 min-w-[50px]">
                 <i data-lucide="navigation" class="w-5 h-5"></i><span class="text-[10px] font-black">的士</span>
             </button>
-            <button onclick="switchTab('places')" data-nav="places" class="nav-btn flex flex-col items-center gap-1 flex-1 text-gray-400">
+            <button onclick="switchTab('places')" data-nav="places" class="nav-btn flex flex-col items-center gap-1 flex-1 text-gray-400 min-w-[50px]">
                 <i data-lucide="map-pin" class="w-5 h-5"></i><span class="text-[10px] font-black">地點</span>
             </button>
-            <button onclick="switchTab('expense')" data-nav="expense" class="nav-btn flex flex-col items-center gap-1 flex-1 text-gray-400">
+            <button onclick="switchTab('expense')" data-nav="expense" class="nav-btn flex flex-col items-center gap-1 flex-1 text-gray-400 min-w-[50px]">
                 <i data-lucide="credit-card" class="w-5 h-5"></i><span class="text-[10px] font-black">記帳</span>
             </button>
-            <button onclick="switchTab('info')" data-nav="info" class="nav-btn flex flex-col items-center gap-1 flex-1 text-gray-400">
+            <button onclick="switchTab('weather')" data-nav="weather" class="nav-btn flex flex-col items-center gap-1 flex-1 text-gray-400 min-w-[50px]">
                 <i data-lucide="cloud-sun" class="w-5 h-5"></i><span class="text-[10px] font-black">天氣</span>
             </button>
-            <button onclick="switchTab('phrase')" data-nav="phrase" class="nav-btn flex flex-col items-center gap-1 flex-1 text-gray-400">
+            <button onclick="switchTab('info')" data-nav="info" class="nav-btn flex flex-col items-center gap-1 flex-1 text-gray-400 min-w-[50px]">
+                <i data-lucide="info" class="w-5 h-5"></i><span class="text-[10px] font-black">實用</span>
+            </button>
+            <button onclick="switchTab('phrase')" data-nav="phrase" class="nav-btn flex flex-col items-center gap-1 flex-1 text-gray-400 min-w-[50px]">
                 <i data-lucide="message-circle" class="w-5 h-5"></i><span class="text-[10px] font-black">韓語</span>
             </button>
         </div>
@@ -221,61 +225,54 @@ const itinerary = {
             { time: "18:30", desc: "晚餐：廣安里海景西餐廳", note: "看著大橋吃晚餐，提早吃防暈船" },
             { time: "20:15", desc: "廣安里海灘漫步消化", note: "慢慢散步去遊艇中心，約需 30 分鐘" },
             { time: "21:00", desc: "抵達遊艇服務處登記", loc: "광안리해양레포츠센터", note: "地址: 부산 수영구 광안해변로54번길 222" },
-            { time: "21:30", desc: "Yacht Holic 遊艇體驗 🥂", note: "⭐ 海上欣賞 22:00 無人機表演！(☔ 若因豪雨取消，改去 The Bay 101 吃炸魚薯條看室內夜景)" },
+            { time: "21:30", desc: "Yacht Holic 遊艇體驗 🥂", note: "⭐ 海上欣賞 22:00 無人機表演！" },
             { time: "22:45", desc: "回程：返回酒店", taxi: "回程約 ₩8,000 (約 20 分鐘)" }
         ]
     },
     2: {
         date: "04/26 (日)", title: "🦈 水族館避雨 ➡️ 海岸列車 ➡️ 烤肉",
         items: [
-            { time: "09:30", desc: "SEA LIFE 釜山水族館 🦈", note: "⭐ 金在中同款！(完全在室內，雨天首選)", loc: "씨라이프 부산아쿠아리움" },
+            { time: "09:30", desc: "SEA LIFE 釜山水族館 🦈", note: "⭐ 金在中同款！(完全在室內)", loc: "씨라이프 부산아쿠아리움" },
             { time: "11:00", desc: "早午餐：海木 (Haemok) 鰻魚飯", note: "建議 10:30 先去現場取號", loc: "해목 해운대점" },
             { time: "12:30", desc: "去尾浦站乘搭海岸列車", taxi: "海木出發約 ₩4,800 (約 10 分鐘)" },
-            { time: "13:00", desc: "海岸列車 (尾浦 ➜ 松亭)", note: "持 VBP。車廂內看雨中海景超浪漫！", loc: "해운대블루라인파크 미포정거장" },
-            { time: "14:30", desc: "松亭/青沙浦 海景咖啡廳", note: "☔ 雨天建議略過龍宮寺，改在 Coralani 或 DIART Coffee 喝咖啡聽雨聲。", loc: "디아트커피" },
+            { time: "13:00", desc: "海岸列車 (尾浦 ➜ 松亭)", note: "持 VBP。看海景超浪漫！", loc: "해운대블루라인파크 미포정거장" },
+            { time: "14:30", desc: "松亭/青沙浦 海景咖啡廳", note: "在 Coralani 或 DIART Coffee 喝咖啡。", loc: "디아트커피" },
             { time: "17:15", desc: "青沙浦站排隊準備", note: "建議預留 45 分鐘排隊驗票" },
-            { time: "18:00", desc: "膠囊小火車 (青沙浦 ➜ 尾浦)", note: "已預約，雨天的車廂也很溫馨" },
+            { time: "18:00", desc: "膠囊小火車 (青沙浦 ➜ 尾浦)", note: "已預約，車廂內看日落很溫馨" },
             { time: "19:00", desc: "返回海雲台商圈", taxi: "尾浦出發約 ₩5,000 (約 10 分鐘)" },
             { time: "19:30", desc: "晚餐：Haewolmok 烤肉 🥩", note: "⭐ 金在中同款愛店！", loc: "해월목" }
         ]
     },
     3: {
-        date: "04/27 (一)", title: "🏎️ 機張動感樂園 ➡️ 海雲台晚餐",
+        date: "04/27 (一)", title: "🏎️ 機張區 (Skyline Luge/樂天世界/釜山Outlet)",
         items: [
             { time: "10:00", desc: "早餐" },
-            { time: "11:30", desc: "Skyline Luge (VBP #2) 🏎️", taxi: "海雲台出發約 ₩18,000 (約 25 分鐘)", loc: "스카이라인 루지 부산", note: "☔ 雨天備案：改去旁邊的「釜山國立科學館」或「IKEA 東釜山店」室內逛街。" },
-            { time: "13:00", desc: "樂天 Outlet 購物 & 午餐", note: "內有 EPT 專櫃 (走廊多有遮雨棚)", loc: "롯데프리미엄아울렛 동부산점" },
-            { time: "16:00", desc: "樂天世界 (VBP #3) 🎡", loc: "롯데월드 어드벤처 부산", note: "✨ 童話城堡、看遊行。☔ 雨天備案：若雨大設施停開，提早回市區逛「新世界百貨 Centum City」血拼及享受超豪華 Spa Land。" },
-            { time: "19:00", desc: "返回海雲台商圈", taxi: "樂天出發約 ₩15,000 (約 30 分鐘)" },
-            { time: "19:30", desc: "晚餐：海雲台周邊用餐", note: "💡 餐廳到時先算！可以喺海雲台大街隨心挑選。" },
+            { time: "11:30", desc: "Skyline Luge 斜坡滑車 (VBP #2)", taxi: "從海雲台出發約 25 分鐘", loc: "스카이라인 루지 부산" },
+            { time: "13:00", desc: "樂天 Outlet 購物 & 午餐", loc: "롯데프리미엄아울렛 동부산점" },
+            { time: "16:00", desc: "樂天世界 (VBP #3) 🎡", loc: "롯데월드 어드벤처 부산", note: "✨ 童話城堡、看遊行。" },
             { time: "21:00", desc: "回酒店休息" }
         ]
     },
     4: {
-        date: "04/28 (二)", title: "🖼️ 影島光影藝術 ➡️ 南浦洞地下街",
+        date: "04/28 (二)", title: "🦊 甘川洞小王子 ➡️ 松島 ➡️ 白淺灘 ➡️ 南浦洞",
         items: [
-            { time: "10:00", desc: "ARTE Museum Busan 🖼️", taxi: "海雲台出發約 ₩25,000 (約 45 分鐘)", loc: "아르떼뮤지엄 부산", note: "⭐ 雨天最強備案！超人氣室內沉浸式光影展，取代易淋雨的甘川洞。" },
-            { time: "13:00", desc: "白淺灘文化村 / 影島 Cafe", taxi: "ARTE出發約 ₩8,000 (約 15 分鐘)", note: "找間面海咖啡廳看絕美海景避雨。", loc: "흰여울문화마을" },
-            { time: "15:30", desc: "龍頭山公園 (視天氣)", taxi: "白淺灘出發約 ₩7,000 (約 15 分鐘)", note: "☔ 若雨大可直接略過，進入地下街。", loc: "용두산공원" },
-            { time: "16:00", desc: "南浦洞商圈 & 地下街 🛍️", note: "連接地鐵的超長地下街，完全不怕下雨！可逛 ABC Mart / OY。", loc: "남포동거리" },
-            { time: "19:00", desc: "富平罐頭市場", note: "⭐ 有巨型遮雨頂棚！買 Milgot (밀곳) 艾草糕。", loc: "부평깡통시장" },
-            { time: "19:30", desc: "晚餐：富平豬蹄街", note: "就在罐頭市場隔壁，推薦涼拌豬蹄", loc: "부산 부평족발골목" },
-            { time: "21:00", desc: "回酒店", taxi: "南浦洞直回約 ₩20,000 (約 40 分鐘)" }
+            { time: "09:30", desc: "甘川洞文化村", loc: "감천문화마을", note: "⭐ 一定要跟小王子合照！" },
+            { time: "11:30", desc: "松島海上纜車", loc: "송도해상케이블카" },
+            { time: "12:30", desc: "松島龍宮雲橋", loc: "송도용궁구름다리" },
+            { time: "14:00", desc: "白淺灘文化村", loc: "흰여울문화마을", note: "找間面海咖啡廳看絕美海景。" },
+            { time: "16:30", desc: "南浦洞商圈 🛍️", loc: "남포동거리", note: "連接地鐵的超長地下街，可逛 ABC Mart / OY。" },
+            { time: "19:00", desc: "晚餐：南浦洞 / 富平豬蹄街", loc: "부산 부평족발골목" },
+            { time: "21:00", desc: "回酒店休息" }
         ]
     },
     5: {
-        date: "04/29 (三)", title: "🚠 松島纜車 ➡️ 西面購物 ➡️ Gojip 總店",
+        date: "04/29 (三)", title: "🛍️ 樂天百貨 ➡️ Gojip烤牛肋骨 ➡️ 機場",
         items: [
-            { time: "09:30", desc: "Moving Photo 報紙自拍店 📷", taxi: "海雲台出發約 ₩22,000 (約 40 分鐘)", note: "室內自拍不怕雨！VBP折₩2,000。", loc: "무빙포토 송도해상케이블카점" },
-            { time: "10:30", desc: "松島海上纜車 (VBP #4)", note: "水晶來回₩22k。☔ 一般雨天照常行駛，雨景別有風情。", loc: "송도해상케이블카" },
-            { time: "11:30", desc: "松島龍宮雲橋 (VBP #5)", note: "☔ 若風大雨大會關閉，可改在纜車對岸喝咖啡。", loc: "송도용궁구름다리" },
-            { time: "12:30", desc: "回海雲台", taxi: "松島出發約 ₩22,000 (約 40 分鐘)" },
-            { time: "13:30", desc: "午餐：風川灣淡水鰻魚", note: "海雲台 LCT 附近，現點現烤", loc: "풍천만 해운대점" },
-            { time: "15:00", desc: "返回酒店取行李，前往西面", taxi: "海雲台出發約 ₩18,000 (約 35 分鐘)" },
-            { time: "16:00", desc: "樂天百貨 (釜山總店) 購物 🛍️", note: "位於西面。大型行李可免費寄存於百貨公司內或西面站儲物櫃。", loc: "롯데백화점 부산본점" },
-            { time: "17:30", desc: "晚餐：Gojip 總店 (烤牛肋骨) 🥩", note: "地址：부산광역시 부산진구 부전로 64", loc: "고짚" },
-            { time: "19:00", desc: "出發前往金海機場 🚕", taxi: "西面出發約 ₩16,000 (大概 30 分鐘即可抵達機場)", note: "食飽直接截的士去機場，免卻轉車搬行李之苦！" },
-            { time: "19:30", desc: "到達金海機場", note: "航班：TW639，21:50 起飛" }
+            { time: "10:30", desc: "樂天百貨 (釜山總店) Shopping", loc: "롯데백화점 부산본점", note: "位於西面。可瘋狂血拼！" },
+            { time: "14:00", desc: "午餐：Gojip 總店 (烤牛肋骨) 🥩", loc: "고짚" },
+            { time: "16:30", desc: "返酒店拎行李" },
+            { time: "17:30", desc: "出發去機場 🚕" },
+            { time: "18:30", desc: "到達金海國際機場", note: "準備辦理退稅及登機手續，航班 TW639 預計 21:50 起飛。" }
         ]
     }
 };
@@ -357,8 +354,8 @@ function switchTab(tab) {
         else btn.className = "tab-btn flex-shrink-0 min-w-[72px] px-2 py-3 text-xs sm:text-sm font-black rounded-lg transition-all flex items-center justify-center gap-1.5 text-gray-400";
     });
     document.querySelectorAll('.nav-btn').forEach(btn => {
-        if(btn.dataset.nav === tab) btn.className = "nav-btn flex flex-col items-center gap-1 flex-1 text-[#1a2b4c]";
-        else btn.className = "nav-btn flex flex-col items-center gap-1 flex-1 text-gray-400";
+        if(btn.dataset.nav === tab) btn.className = "nav-btn flex flex-col items-center gap-1 flex-1 text-[#1a2b4c] min-w-[50px]";
+        else btn.className = "nav-btn flex flex-col items-center gap-1 flex-1 text-gray-400 min-w-[50px]";
     });
     renderTabContent();
 }
@@ -492,44 +489,140 @@ function renderTabContent() {
         html += `</div></div>`;
     } 
     
-    else if (currentTab === 'info') {
-        html += `<div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-200 mb-4"><h3 class="text-lg font-black text-[#1a2b4c] mb-3 flex items-center gap-2"><i data-lucide="cloud-sun" class="w-5 h-5 text-blue-500"></i> 釜山即時天氣 (5天預報)</h3>`;
+    else if (currentTab === 'weather') {
+        html += `<div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-200 mb-4"><h3 class="text-lg font-black text-[#1a2b4c] mb-3 flex items-center gap-2"><i data-lucide="cloud-sun" class="w-5 h-5 text-blue-500"></i> 釜山即時天氣</h3>`;
         if (weatherLoading) {
             html += `<p class="text-gray-400 text-sm font-bold">載入天氣數據中...</p>`;
         } else if (weatherData) {
             const wCurr = weatherData.current;
             const wInfo = getWeatherInfo(wCurr.weather_code);
+            
+            // 判斷未來24小時內是否有高機率降雨
+            let rainWarning = false;
+            if (weatherData.hourly && weatherData.hourly.precipitation_probability) {
+                const upcomingRain = weatherData.hourly.precipitation_probability.slice(0, 24);
+                if (Math.max(...upcomingRain) >= 50) rainWarning = true;
+            }
+
+            if (rainWarning) {
+                html += `<div class="bg-red-50 p-3 rounded-xl border border-red-100 flex items-center gap-2 mb-4"><i data-lucide="umbrella" class="w-5 h-5 text-red-500"></i><p class="text-xs font-black text-red-700">☔ 未來24小時降雨機率高，出門請務必攜帶雨傘！</p></div>`;
+            }
+
             html += `
-            <div class="space-y-4">
-                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 flex items-center justify-between">
-                    <div>
-                        <p class="text-2xl font-black text-blue-600">${wCurr.temperature_2m}°C</p>
-                        <p class="text-xs text-gray-500 font-bold mt-0.5">體感溫度: ${wCurr.apparent_temperature}°C</p>
-                        <p class="text-sm font-black text-gray-700 mt-1">${wInfo.icon} ${wInfo.desc}</p>
-                    </div>
-                    <div class="text-right max-w-[60%]">
-                        <span class="text-xs bg-white px-2.5 py-1 rounded-full border border-blue-200 font-black text-blue-700 inline-block">穿著建議</span>
-                        <p class="text-xs text-gray-600 font-bold mt-1.5 leading-relaxed">${getClothingSuggestion(wCurr.apparent_temperature)}</p>
-                    </div>
+            <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 flex items-center justify-between mb-4">
+                <div>
+                    <p class="text-2xl font-black text-blue-600">${wCurr.temperature_2m}°C</p>
+                    <p class="text-xs text-gray-500 font-bold mt-0.5">體感溫度: ${wCurr.apparent_temperature}°C</p>
+                    <p class="text-sm font-black text-gray-700 mt-1">${wInfo.icon} ${wInfo.desc}</p>
                 </div>
-                <div class="border-t border-gray-100 pt-3">
-                    <p class="text-xs font-black text-gray-400 mb-2 uppercase tracking-wider">未來幾日最高/最低溫</p>
-                    <div class="grid grid-cols-5 gap-2 text-center">
+                <div class="text-right max-w-[60%]">
+                    <span class="text-xs bg-white px-2.5 py-1 rounded-full border border-blue-200 font-black text-blue-700 inline-block">穿著建議</span>
+                    <p class="text-xs text-gray-600 font-bold mt-1.5 leading-relaxed">${getClothingSuggestion(wCurr.apparent_temperature)}</p>
+                </div>
+            </div>`;
+
+            // 3日(72小時) 每小時天氣橫向滾動
+            html += `
+            <div class="border-t border-gray-100 pt-4">
+                <h4 class="text-sm font-black text-[#1a2b4c] mb-3">⏳ 3日每小時動態預報</h4>
+                <div class="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+            `;
+            weatherData.hourly.time.slice(0, 72).forEach((time, i) => {
+                const hW = getWeatherInfo(weatherData.hourly.weather_code[i]);
+                const pop = weatherData.hourly.precipitation_probability[i];
+                const d = new Date(time);
+                const timeStr = `${d.getHours().toString().padStart(2, '0')}:00`;
+                const dateStr = `${d.getMonth()+1}/${d.getDate()}`;
+                html += `
+                <div class="flex-shrink-0 bg-gray-50 p-2.5 rounded-xl border border-gray-100 min-w-[60px] text-center flex flex-col items-center">
+                    <p class="text-[10px] font-bold text-gray-400 mb-1">${dateStr}</p>
+                    <p class="text-xs font-black text-gray-800 mb-1">${timeStr}</p>
+                    <p class="text-lg my-1">${hW.icon}</p>
+                    <p class="text-sm font-black text-[#1a2b4c]">${Math.round(weatherData.hourly.temperature_2m[i])}°</p>
+                    <p class="text-[9px] font-black ${pop > 40 ? 'text-blue-500' : 'text-gray-400'} mt-1 flex items-center gap-0.5"><i data-lucide="droplets" class="w-2.5 h-2.5"></i> ${pop}%</p>
+                </div>`;
+            });
+            html += `</div></div>`;
+
+            // 10日天氣預測
+            html += `
+            <div class="border-t border-gray-100 pt-4 mt-2">
+                <h4 class="text-sm font-black text-[#1a2b4c] mb-3">📅 10日天氣預測</h4>
+                <div class="space-y-2">
             `;
             weatherData.daily.time.forEach((time, i) => {
                 const dayW = getWeatherInfo(weatherData.daily.weather_code[i]);
+                const dateStr = time.split('-')[1] + '/' + time.split('-')[2];
                 html += `
-                <div class="bg-gray-50 p-2 rounded-lg border border-gray-100">
-                    <p class="text-[10px] font-bold text-gray-400">${time.split('-')[1]}/{time.split('-')[2]}</p>
-                    <p class="text-sm my-0.5">${dayW.icon}</p>
-                    <p class="text-[10px] font-black text-gray-700">${Math.round(weatherData.daily.temperature_2m_max[i])}°/${Math.round(weatherData.daily.temperature_2m_min[i])}°</p>
+                <div class="flex items-center justify-between bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    <p class="text-xs font-black text-gray-600 w-12">${dateStr}</p>
+                    <div class="flex items-center gap-2 flex-1 justify-center">
+                        <span class="text-xl">${dayW.icon}</span>
+                        <span class="text-xs font-bold text-gray-500">${dayW.desc}</span>
+                    </div>
+                    <div class="w-16 text-right">
+                        <p class="text-xs font-black text-gray-800">${Math.round(weatherData.daily.temperature_2m_max[i])}° <span class="text-gray-300 font-bold mx-0.5">/</span> ${Math.round(weatherData.daily.temperature_2m_min[i])}°</p>
+                    </div>
                 </div>`;
             });
             html += `</div></div></div>`;
         } else {
-            html += `<p class="text-red-400 text-sm font-bold">無法獲取天氣數據</p>`;
+            html += `<p class="text-red-400 text-sm font-bold">無法獲取天氣數據</p></div>`;
         }
-        html += `</div><div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-200 space-y-3"><h3 class="text-lg font-black text-[#1a2b4c] flex items-center gap-2"><i data-lucide="info" class="w-5 h-5 text-amber-500"></i> 實用資訊明細</h3><div class="text-sm space-y-2 font-bold text-gray-600 leading-relaxed"><p>🔹 <span class="text-[#1a2b4c] font-black">匯率基準：</span>本手冊採用固定匯率 1 HKD : 185 KRW 計算。</p><p>🔹 <span class="text-[#1a2b4c] font-black">電壓插頭：</span>韓國為 220V 雙圓頭插座（德標/韓標）。</p><p>🔹 <span class="text-[#1a2b4c] font-black">緊急求助：</span>報警請撥 112，急救請撥 119。</p><p>🔹 <span class="text-[#1a2b4c] font-black">WOWPASS：</span>可在多數地鐵站機台儲值外幣、提領韓元，並可直接當作交通卡與信用卡使用。</p></div></div>`;
+    } 
+    
+    else if (currentTab === 'info') {
+        html += `
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-200 mb-4">
+            <h3 class="text-lg font-black text-[#1a2b4c] flex items-center gap-2 mb-5"><i data-lucide="info" class="w-5 h-5 text-amber-500"></i> 韓國旅遊實用攻略</h3>
+            
+            <div class="space-y-5">
+                <!-- 貨幣與支付 -->
+                <div class="border-l-4 border-amber-400 pl-3">
+                    <h4 class="text-sm font-black text-[#1a2b4c] mb-1">💳 貨幣與支付 (WOWPASS)</h4>
+                    <p class="text-xs text-gray-600 font-bold leading-relaxed">
+                        強烈建議辦理 <span class="text-[#1a2b4c] font-black">WOWPASS</span>。可在多數地鐵機台直接儲值港幣/外幣，具備 T-Money 交通卡功能，並可直接當作信用卡於餐廳、便利店及的士上刷卡消費。
+                    </p>
+                </div>
+
+                <!-- 退稅攻略 -->
+                <div class="border-l-4 border-emerald-400 pl-3">
+                    <h4 class="text-sm font-black text-[#1a2b4c] mb-1">🛍️ 退稅攻略 (Tax Free)</h4>
+                    <p class="text-xs text-gray-600 font-bold leading-relaxed">
+                        <span class="text-emerald-700 font-black">現場退稅：</span>單筆滿 ₩30,000 即可退稅，如 OY 藥妝店、便利店結帳出示護照可直接扣減。<br>
+                        <span class="text-emerald-700 font-black">機場退稅：</span>保留退稅單據，於機場自助機台 (Kiosk) 掃描護照及單據，可選退還現金或退至信用卡。
+                    </p>
+                </div>
+
+                <!-- 實用 App 推薦 -->
+                <div class="border-l-4 border-blue-400 pl-3">
+                    <h4 class="text-sm font-black text-[#1a2b4c] mb-1">📱 必備 App 推薦</h4>
+                    <ul class="text-xs text-gray-600 font-bold leading-relaxed list-disc list-inside">
+                        <li><span class="text-[#1a2b4c] font-black">Naver Map：</span>韓國找路/巴士/地鐵必備 (Google Map 韓國無步行導航)。</li>
+                        <li><span class="text-[#1a2b4c] font-black">Papago：</span>翻譯神器，語音與圖片翻譯比 Google 更符合韓語語境。</li>
+                        <li><span class="text-[#1a2b4c] font-black">Kakao T：</span>叫的士必備，可綁定海外信用卡，或選擇「現金付款 (Meet Taxi)」。</li>
+                    </ul>
+                </div>
+
+                <!-- 電壓與插頭 -->
+                <div class="border-l-4 border-gray-400 pl-3">
+                    <h4 class="text-sm font-black text-[#1a2b4c] mb-1">🔌 電壓與插頭</h4>
+                    <p class="text-xs text-gray-600 font-bold leading-relaxed">
+                        韓國為 220V 雙圓頭插座（德標/韓標），請務必攜帶轉換插頭。
+                    </p>
+                </div>
+
+                <!-- 緊急聯絡 -->
+                <div class="border-l-4 border-red-400 pl-3">
+                    <h4 class="text-sm font-black text-[#1a2b4c] mb-1">🚨 緊急聯絡與求助</h4>
+                    <p class="text-xs text-gray-600 font-bold leading-relaxed">
+                        • 報警：<span class="text-red-600 font-black">112</span><br>
+                        • 救護車/消防：<span class="text-red-600 font-black">119</span><br>
+                        • 韓國旅遊諮詢熱線：<span class="text-blue-600 font-black">1330</span> (提供中文專人服務)
+                    </p>
+                </div>
+            </div>
+        </div>`;
     } 
     
     else if (currentTab === 'phrase') {
@@ -649,10 +742,11 @@ function closeFullscreenNote() {
 
 // --- 天氣數據對照演算法 ---
 function fetchWeather() {
-    const url = 'https://api.open-meteo.com/v1/forecast?latitude=35.1796&longitude=129.0756&current=temperature_2m,apparent_temperature,weather_code&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Asia%2FSeoul&forecast_days=5';
+    // 改為 10 天預報 (forecast_days=10)
+    const url = 'https://api.open-meteo.com/v1/forecast?latitude=35.1796&longitude=129.0756&current=temperature_2m,apparent_temperature,weather_code&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Asia%2FSeoul&forecast_days=10';
     fetch(url)
     .then(res => res.json())
-    .then(data => { weatherData = data; weatherLoading = false; if(currentTab === 'info') renderTabContent(); })
+    .then(data => { weatherData = data; weatherLoading = false; if(currentTab === 'weather') renderTabContent(); })
     .catch(err => { console.error(err); weatherLoading = false; });
 }
 
