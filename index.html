@@ -12,7 +12,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght=400;700;900&display=swap');
         body { 
             font-family: 'Noto Sans TC', sans-serif; 
             -webkit-tap-highlight-color: transparent;
@@ -51,21 +51,23 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // 核心修復：建立獨立的 Icon 隔離組件，防止 React DOMException 白屏崩潰
+        // 核心修復：徹底隔離 React 與 Lucide 的 DOM 操作，防止白屏崩潰
         const Icon = ({ name, className }) => {
             const spanRef = useRef(null);
+            
             useEffect(() => {
-                if (window.lucide && spanRef.current) {
-                    window.lucide.createIcons({ root: spanRef.current });
+                if (spanRef.current) {
+                    // 原生 JS 寫入 <i>，讓 React 的 Virtual DOM 完全不監控內部結構
+                    spanRef.current.innerHTML = `<i data-lucide="${name}" class="${className || ''}"></i>`;
+                    
+                    // 讓 Lucide 安全地將 <i> 替換為 <svg>
+                    if (window.lucide) {
+                        window.lucide.createIcons({ root: spanRef.current });
+                    }
                 }
-            });
-            return (
-                <span 
-                    ref={spanRef}
-                    style={{ display: 'contents' }}
-                    dangerouslySetInnerHTML={{ __html: `<i data-lucide="${name}" class="${className || ''}"></i>` }}
-                />
-            );
+            }, [name, className]); // 加上依賴陣列，只有在名稱或樣式改變時才重新渲染
+
+            return <span ref={spanRef} style={{ display: 'contents' }} />;
         };
 
         const App = () => {
