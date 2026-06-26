@@ -12,7 +12,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght=400;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
         body { 
             font-family: 'Noto Sans TC', sans-serif; 
             -webkit-tap-highlight-color: transparent;
@@ -49,7 +49,25 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useRef } = React;
+
+        // 核心修復：建立獨立的 Icon 隔離組件，防止 React DOMException 白屏崩潰
+        const Icon = ({ name, className }) => {
+            const spanRef = useRef(null);
+            useEffect(() => {
+                if (window.lucide && spanRef.current) {
+                    window.lucide.createIcons({ root: spanRef.current });
+                }
+            });
+            return (
+                <span 
+                    ref={spanRef}
+                    style={{ display: 'contents' }}
+                    dangerouslySetInnerHTML={{ __html: `<i data-lucide="${name}" class="${className || ''}"></i>` }}
+                />
+            );
+        };
+
         const App = () => {
             const [activeTab, setActiveTab] = useState('itinerary');
             const [activeDay, setActiveDay] = useState(1);
@@ -69,21 +87,17 @@
             const [weatherLoading, setWeatherLoading] = useState(true);
 
             const [transportEx, setTransportEx] = useState(() => {
-                try { return JSON.parse(localStorage.getItem('busan_trans_pro_v9')) || []; } 
+                try { return JSON.parse(localStorage.getItem('busan_trans_pro_v10')) || []; } 
                 catch(e) { return []; }
             });
             const [shoppingEx, setShoppingEx] = useState(() => {
-                try { return JSON.parse(localStorage.getItem('busan_shop_pro_v9')) || []; } 
+                try { return JSON.parse(localStorage.getItem('busan_shop_pro_v10')) || []; } 
                 catch(e) { return []; }
             });
 
             useEffect(() => {
-                lucide.createIcons();
-            }, [activeTab, activeDay, showModal, fullscreenNote, transportEx, shoppingEx, weatherLoading]);
-
-            useEffect(() => {
-                localStorage.setItem('busan_trans_pro_v9', JSON.stringify(transportEx));
-                localStorage.setItem('busan_shop_pro_v9', JSON.stringify(shoppingEx));
+                localStorage.setItem('busan_trans_pro_v10', JSON.stringify(transportEx));
+                localStorage.setItem('busan_shop_pro_v10', JSON.stringify(shoppingEx));
             }, [transportEx, shoppingEx]);
 
             useEffect(() => {
@@ -188,7 +202,6 @@
                 return <span className="bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded text-[9px] font-black shrink-0">🎟️ WOWPASS</span>;
             };
 
-            // ====== 地點資訊資料 (已新增 Gojip 總店及釜山樂天百貨) ======
             const placesData = [
                 { cat: "機場", koName: "김해국제공항", zhName: "金海國際機場", koAddr: "부산 강서구 공항진입로 108", enAddr: "108 Gonghangjinip-ro, Gangseo-gu, Busan" },
                 { cat: "酒店", koName: "W 레지던스 해운대", zhName: "W公寓酒店-海雲台", koAddr: "부산 해운대구 해운대해변로 237", enAddr: "237 Haeundaehaebyeon-ro, Haeundae-gu, Busan" },
@@ -208,7 +221,6 @@
                 { cat: "餐廳", koName: "해월목", zhName: "Haewolmok 烤肉 (金在中同款)", koAddr: "부산 해운대구 구남로12번길 11", enAddr: "11 Gunam-ro 12beon-gil, Haeundae-gu, Busan" }
             ];
 
-            // ====== 行程資料 (已更新 Day 3 及 Day 5) ======
             const itinerary = {
                 1: {
                 date: "04/25 (六)", title: "🛫 抵達 ➡️ 海雲台室內放鬆 ➡️ 遊艇",
@@ -338,7 +350,7 @@
                                     <input type="number" value={hkdInput} onChange={(e) => convertHkdToKrw(e.target.value)} className="w-full text-center text-lg font-black text-[#1a2b4c] bg-transparent focus:outline-none" placeholder="0"/>
                                 </div>
                                 <div className="flex flex-col items-center justify-center">
-                                    <i data-lucide="arrow-left-right" className="w-3.5 h-3.5 text-gray-300"></i>
+                                    <Icon name="arrow-left-right" className="w-3.5 h-3.5 text-gray-300" />
                                     <span className="text-[8px] font-bold text-gray-400 mt-0.5">1:185</span>
                                 </div>
                                 <div className="flex-1 bg-blue-50 rounded-xl p-2 border border-blue-100">
@@ -386,7 +398,7 @@
                                                     {item.loc ? (
                                                         <a href={getNaverMapUrl(item.loc)} target="_blank" rel="noopener noreferrer" className="text-[16px] font-black leading-snug tracking-tight flex items-center flex-wrap text-blue-700 underline decoration-blue-200 underline-offset-4 cursor-pointer active:text-blue-900">
                                                             {item.desc}
-                                                            <i data-lucide="map-pin" className="w-3.5 h-3.5 ml-1.5 text-blue-400 shrink-0 inline-block"></i>
+                                                            <Icon name="map-pin" className="w-3.5 h-3.5 ml-1.5 text-blue-400 shrink-0 inline-block" />
                                                         </a>
                                                     ) : (
                                                         <span className="text-[16px] font-black leading-snug tracking-tight flex items-center flex-wrap text-[#1a2b4c]">
@@ -396,7 +408,7 @@
                                                     {item.note && <p className="text-[12px] text-amber-700 font-bold mt-1.5 flex items-start leading-relaxed"><span className="text-amber-400 mr-1 shrink-0">✨</span>{item.note}</p>}
                                                     {item.taxi && (
                                                         <div className="mt-2.5 flex items-center gap-1.5 text-[10px] font-black text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100 w-fit">
-                                                            <i data-lucide="navigation" className="w-3 h-3 shrink-0"></i> {item.taxi}
+                                                            <Icon name="navigation" className="w-3 h-3 shrink-0" /> {item.taxi}
                                                         </div>
                                                     )}
                                                 </div>
@@ -410,7 +422,7 @@
                         {activeTab === 'taxi' && (
                             <div className="space-y-4">
                                 <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex items-start gap-2 mb-2">
-                                    <i data-lucide="info" className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5"></i>
+                                    <Icon name="info" className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
                                     <p className="text-[11px] text-blue-800 font-bold">💡 點擊「小喇叭」播放語音；點擊「卡片」進入大字展示模式。</p>
                                 </div>
                                 {taxiNotes.map((note, idx) => (
@@ -420,12 +432,12 @@
                                             <div className="absolute top-2 right-3 text-[#fcd34d] opacity-30 text-xs">✦</div>
                                             <p className="text-xl font-bold text-white text-center leading-relaxed pr-8">"{note.k}"</p>
                                             <button onClick={(e) => playKoreanVoice(note.k, e)} className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2.5 bg-white/20 rounded-full hover:bg-white/30 active:scale-90 transition-all text-[#fcd34d]">
-                                                <i data-lucide="volume-2" className="w-5 h-5"></i>
+                                                <Icon name="volume-2" className="w-5 h-5" />
                                             </button>
                                         </div>
                                         <div className="flex justify-between items-center mt-2">
                                             <p className="text-sm text-gray-600 font-bold w-[85%]">{note.d}</p>
-                                            <i data-lucide="chevron-right" className="w-4 h-4 text-gray-300"></i>
+                                            <Icon name="chevron-right" className="w-4 h-4 text-gray-300" />
                                         </div>
                                     </div>
                                 ))}
@@ -435,9 +447,9 @@
                         {activeTab === 'places' && (
                             <div className="space-y-4">
                                 <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100 flex items-start gap-2 mb-2">
-                                    <i data-lucide="map" className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5"></i>
+                                    <Icon name="map" className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
                                     <p className="text-xs text-emerald-800 font-bold leading-relaxed">
-                                        📍 行程中所有搭車地點。<br/>點擊右側 <span className="inline-block bg-white p-1 rounded shadow-sm mx-0.5"><i data-lucide="copy" className="w-3 h-3 text-emerald-600"></i></span> 可複製韓文地址給司機看或貼上地圖搜尋！
+                                        📍 行程中所有搭車地點。<br/>點擊右側 <span className="inline-block bg-white p-1 rounded shadow-sm mx-0.5"><Icon name="copy" className="w-3 h-3 text-emerald-600" /></span> 可複製韓文地址給司機看或貼上地圖搜尋！
                                     </p>
                                 </div>
                                 {placesData.map((place, idx) => (
@@ -455,7 +467,7 @@
                                                     <p className="text-[11px] font-bold text-gray-400 select-all leading-tight">({place.enAddr})</p>
                                                 </div>
                                                 <button onClick={() => copyToClipboard(place.koAddr)} className="p-2.5 bg-white border border-gray-200 rounded-xl shadow-sm hover:bg-gray-100 active:scale-90 transition-all shrink-0">
-                                                    <i data-lucide="copy" className="w-4 h-4 text-[#1a2b4c]"></i>
+                                                    <Icon name="copy" className="w-4 h-4 text-[#1a2b4c]" />
                                                 </button>
                                             </div>
                                         </div>
@@ -486,10 +498,10 @@
                                 <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
                                     <div className="flex justify-between items-center mb-4">
                                         <h3 className="text-base font-black text-[#1a2b4c] flex items-center gap-2">
-                                            <i data-lucide="navigation" className="w-4 h-4 text-blue-500"></i> 🚕 交通/的士
+                                            <Icon name="navigation" className="w-4 h-4 text-blue-500" /> 🚕 交通/的士
                                         </h3>
                                         <button onClick={() => openExpenseModal('trans')} className="bg-[#1a2b4c] text-white p-2 rounded-lg shadow-sm active:scale-95 transition-transform">
-                                            <i data-lucide="plus" className="w-4 h-4"></i>
+                                            <Icon name="plus" className="w-4 h-4" />
                                         </button>
                                     </div>
                                     <div className="space-y-2.5">
@@ -503,7 +515,7 @@
                                                 <div className="flex items-center gap-3 shrink-0 ml-2">
                                                     <p className="text-sm font-black text-[#1a2b4c]">₩{item.cost.toLocaleString()}</p>
                                                     <button onClick={() => deleteExpense('trans', item.id)} className="text-gray-300 hover:text-red-500 p-1">
-                                                        <i data-lucide="trash-2" className="w-3.5 h-3.5"></i>
+                                                        <Icon name="trash-2" className="w-3.5 h-3.5" />
                                                     </button>
                                                 </div>
                                             </div>
@@ -514,10 +526,10 @@
                                 <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
                                     <div className="flex justify-between items-center mb-4">
                                         <h3 className="text-base font-black text-[#1a2b4c] flex items-center gap-2">
-                                            <i data-lucide="shopping-bag" className="w-4 h-4 text-emerald-500"></i> 🛍️ 購物/餐飲/其他
+                                            <Icon name="shopping-bag" className="w-4 h-4 text-emerald-500" /> 🛍️ 購物/餐飲/其他
                                         </h3>
                                         <button onClick={() => openExpenseModal('shop')} className="bg-[#1a2b4c] text-white p-2 rounded-lg shadow-sm active:scale-95 transition-transform">
-                                            <i data-lucide="plus" className="w-4 h-4"></i>
+                                            <Icon name="plus" className="w-4 h-4" />
                                         </button>
                                     </div>
                                     <div className="space-y-2.5">
@@ -531,7 +543,7 @@
                                                 <div className="flex items-center gap-3 shrink-0 ml-2">
                                                     <p className="text-sm font-black text-[#1a2b4c]">₩{item.cost.toLocaleString()}</p>
                                                     <button onClick={() => deleteExpense('shop', item.id)} className="text-gray-300 hover:text-red-500 p-1">
-                                                        <i data-lucide="trash-2" className="w-3.5 h-3.5"></i>
+                                                        <Icon name="trash-2" className="w-3.5 h-3.5" />
                                                     </button>
                                                 </div>
                                             </div>
@@ -545,11 +557,11 @@
                             <div className="space-y-4">
                                 <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-200">
                                     <h3 className="text-lg font-black text-[#1a2b4c] mb-3 flex items-center gap-2">
-                                        <i data-lucide="cloud-sun" className="w-5 h-5 text-blue-500"></i> 釜山即時天氣 (5天預報)
+                                        <Icon name="cloud-sun" className="w-5 h-5 text-blue-500" /> 釜山即時天氣 (5天預報)
                                     </h3>
                                     {weatherLoading ? (
                                         <p className="text-gray-400 text-sm font-bold">載入天氣數據中...</p>
-                                    ) : weather ? (
+                                    ) : weather && weather.current && weather.daily ? (
                                         <div className="space-y-4">
                                             <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex items-center justify-between">
                                                 <div>
@@ -570,7 +582,7 @@
                                             <div className="border-t border-gray-100 pt-3">
                                                 <p className="text-xs font-black text-gray-400 mb-2 uppercase tracking-wider">未來幾日最高/最低溫</p>
                                                 <div className="grid grid-cols-5 gap-2 text-center">
-                                                    {weather.daily.time.map((time, i) => (
+                                                    {weather.daily.time?.map((time, i) => (
                                                         <div key={time} className="bg-gray-50 p-2 rounded-lg border border-gray-100">
                                                             <p className="text-[10px] font-bold text-gray-400">{time.split('-')[1]}/{time.split('-')[2]}</p>
                                                             <p className="text-sm my-0.5">{getWeatherInfo(weather.daily.weather_code[i]).icon}</p>
@@ -587,7 +599,7 @@
                                 
                                 <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-200 space-y-3">
                                     <h3 className="text-lg font-black text-[#1a2b4c] flex items-center gap-2">
-                                        <i data-lucide="info" className="w-5 h-5 text-amber-500"></i> 實用資訊明細
+                                        <Icon name="info" className="w-5 h-5 text-amber-500" /> 實用資訊明細
                                     </h3>
                                     <div className="text-sm space-y-2 font-bold text-gray-600 leading-relaxed">
                                         <p>🔹 <span className="text-[#1a2b4c] font-black">匯率基準：</span>本手冊採用固定匯率 1 HKD : 185 KRW 計算。</p>
@@ -602,7 +614,7 @@
                         {activeTab === 'phrase' && (
                             <div className="space-y-4">
                                 <div className="bg-amber-50 p-4 rounded-xl border border-amber-100 flex items-start gap-2 mb-2">
-                                    <i data-lucide="languages" className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5"></i>
+                                    <Icon name="languages" className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
                                     <p className="text-[11px] text-amber-800 font-bold">💡 點擊「小喇叭」可直接播放韓語發音給店員或當地人聽！</p>
                                 </div>
                                 {koreanPhrases.map((phrase, idx) => (
@@ -613,7 +625,7 @@
                                             <p className="text-sm font-bold text-blue-600 mt-0.5 select-all">{phrase.k}</p>
                                         </div>
                                         <button onClick={() => playKoreanVoice(phrase.k)} className="p-3 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 active:scale-90 transition-all shrink-0 shadow-sm">
-                                            <i data-lucide="volume-2" className="w-5 h-5"></i>
+                                            <Icon name="volume-2" className="w-5 h-5" />
                                         </button>
                                     </div>
                                 ))}
@@ -657,19 +669,53 @@
 
                     {fullscreenNote && (
                         <div onClick={() => setFullscreenNote(null)} className="fixed inset-0 bg-black/90 backdrop-blur-md z-[550] flex flex-col items-center justify-center p-6 cursor-pointer">
-                            <button className="absolute top-8 right-8 p-4 text-white/50 z-20"><i data-lucide="x" className="w-10 h-10"></i></button>
+                            <button className="absolute top-8 right-8 p-4 text-white/50 z-20"><Icon name="x" className="w-10 h-10" /></button>
                             <div className="w-full text-center space-y-10 z-10 max-w-md">
                                 <p className="text-[#fcd34d] text-lg font-black tracking-widest uppercase">{fullscreenNote.t}</p>
                                 <div className="bg-white/10 rounded-3xl p-8 border border-white/20 backdrop-blur-md shadow-2xl">
                                     <p className="text-3xl font-black text-white leading-snug break-words">"{fullscreenNote.k}"</p>
                                 </div>
                                 <button onClick={(e) => playKoreanVoice(fullscreenNote.k, e)} className="mx-auto flex items-center justify-center gap-3 bg-[#fcd34d] text-[#1a2b4c] px-8 py-4 rounded-full font-black text-xl shadow-lg active:scale-95 transition-transform">
-                                    <i data-lucide="volume-2" className="w-6 h-6"></i> 播放語音給對方聽
+                                    <Icon name="volume-2" className="w-6 h-6" /> 播放語音給對方聽
                                 </button>
                                 <p className="text-gray-300 text-lg font-bold">{fullscreenNote.d}</p>
                             </div>
                         </div>
                     )}
+
+                    <div className="fixed bottom-0 left-0 right-0 z-[100] shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
+                        <div className="bg-[#1a2b4c] px-5 py-2 flex justify-between items-center border-t border-[#1a2b4c]">
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">Total</span>
+                                <span className="text-base font-black text-white tracking-tight">₩{totalAll.toLocaleString()}</span>
+                            </div>
+                            <div className="flex items-baseline gap-2">
+                                <span className="text-[10px] font-black text-[#fcd34d]/80 uppercase tracking-widest">HKD</span>
+                                <span className="text-base font-black text-[#fcd34d] tracking-tight">${(totalAll/185).toFixed(0)}</span>
+                            </div>
+                        </div>
+                        
+                        <div className="h-[60px] bg-white flex items-center justify-around border-t border-gray-200 px-1 pb-1">
+                            <button onClick={() => setActiveTab('itinerary')} className={`flex flex-col items-center gap-1 flex-1 ${activeTab === 'itinerary' ? 'text-[#1a2b4c]' : 'text-gray-400'}`}>
+                                <Icon name="calendar" className="w-5 h-5" /><span className="text-[10px] font-black">行程</span>
+                            </button>
+                            <button onClick={() => setActiveTab('taxi')} className={`flex flex-col items-center gap-1 flex-1 ${activeTab === 'taxi' ? 'text-[#1a2b4c]' : 'text-gray-400'}`}>
+                                <Icon name="navigation" className="w-5 h-5" /><span className="text-[10px] font-black">的士</span>
+                            </button>
+                            <button onClick={() => setActiveTab('places')} className={`flex flex-col items-center gap-1 flex-1 ${activeTab === 'places' ? 'text-[#1a2b4c]' : 'text-gray-400'}`}>
+                                <Icon name="map-pin" className="w-5 h-5" /><span className="text-[10px] font-black">地點</span>
+                            </button>
+                            <button onClick={() => setActiveTab('expense')} className={`flex flex-col items-center gap-1 flex-1 ${activeTab === 'expense' ? 'text-[#1a2b4c]' : 'text-gray-400'}`}>
+                                <Icon name="credit-card" className="w-5 h-5" /><span className="text-[10px] font-black">記帳</span>
+                            </button>
+                            <button onClick={() => setActiveTab('info')} className={`flex flex-col items-center gap-1 flex-1 ${activeTab === 'info' ? 'text-[#1a2b4c]' : 'text-gray-400'}`}>
+                                <Icon name="cloud-sun" className="w-5 h-5" /><span className="text-[10px] font-black">天氣</span>
+                            </button>
+                            <button onClick={() => setActiveTab('phrase')} className={`flex flex-col items-center gap-1 flex-1 ${activeTab === 'phrase' ? 'text-[#1a2b4c]' : 'text-gray-400'}`}>
+                                <Icon name="message-circle" className="w-5 h-5" /><span className="text-[10px] font-black">韓語</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             );
         };
