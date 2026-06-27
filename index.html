@@ -272,7 +272,7 @@ const itinerary = {
             { time: "14:00", desc: "午餐：Gojip 總店 (烤牛肋骨) 🥩", loc: "고짚" },
             { time: "16:30", desc: "返酒店拎行李" },
             { time: "17:30", desc: "出發去機場 🚕" },
-            { time: "18:30", desc: "到達金海國際機場", note: "準備辦理退稅及登機手續，航班 TW639 預計 21:50 起飛。" }
+            { time: "18:30", desc: "到達金海國際機場", note: "準備辦理退稅及登機手續，航班 TW639 預計 21:50起飛。" }
         ]
     }
 };
@@ -497,10 +497,21 @@ function renderTabContent() {
             const wCurr = weatherData.current;
             const wInfo = getWeatherInfo(wCurr.weather_code);
             
-            // 判斷未來24小時內是否有高機率降雨
+            // --- 時間過濾邏輯：確保只抓取現在或未來的時間 ---
+            let startIndex = 0;
+            const threshold = new Date().getTime() - (60 * 60 * 1000); // 減去一小時緩衝，確保當前小時不消失
+            
+            for(let i = 0; i < weatherData.hourly.time.length; i++) {
+                if (new Date(weatherData.hourly.time[i]).getTime() >= threshold) {
+                    startIndex = i;
+                    break;
+                }
+            }
+
+            // 判斷【未來24小時】內是否有高機率降雨
             let rainWarning = false;
             if (weatherData.hourly && weatherData.hourly.precipitation_probability) {
-                const upcomingRain = weatherData.hourly.precipitation_probability.slice(0, 24);
+                const upcomingRain = weatherData.hourly.precipitation_probability.slice(startIndex, startIndex + 24);
                 if (Math.max(...upcomingRain) >= 50) rainWarning = true;
             }
 
@@ -521,18 +532,22 @@ function renderTabContent() {
                 </div>
             </div>`;
 
-            // 3日(72小時) 每小時天氣橫向滾動
+            // 3日(72小時) 每小時天氣橫向滾動 (已修正為從當下時間開始)
             html += `
             <div class="border-t border-gray-100 pt-4">
-                <h4 class="text-sm font-black text-[#1a2b4c] mb-3">⏳ 3日每小時動態預報</h4>
+                <h4 class="text-sm font-black text-[#1a2b4c] mb-3">⏳ 未來72小時動態預報</h4>
                 <div class="flex gap-2 overflow-x-auto no-scrollbar pb-2">
             `;
-            weatherData.hourly.time.slice(0, 72).forEach((time, i) => {
+            
+            const hourlyTimes = weatherData.hourly.time.slice(startIndex, startIndex + 72);
+            hourlyTimes.forEach((time, loopIdx) => {
+                const i = startIndex + loopIdx; // 計算在原始陣列中的正確位置
                 const hW = getWeatherInfo(weatherData.hourly.weather_code[i]);
                 const pop = weatherData.hourly.precipitation_probability[i];
                 const d = new Date(time);
                 const timeStr = `${d.getHours().toString().padStart(2, '0')}:00`;
                 const dateStr = `${d.getMonth()+1}/${d.getDate()}`;
+                
                 html += `
                 <div class="flex-shrink-0 bg-gray-50 p-2.5 rounded-xl border border-gray-100 min-w-[60px] text-center flex flex-col items-center">
                     <p class="text-[10px] font-bold text-gray-400 mb-1">${dateStr}</p>
